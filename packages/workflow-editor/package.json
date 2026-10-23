@@ -1,0 +1,24 @@
+{
+  "name": "@argocanvas/workflow-editor",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json --noEmit",
+    "lint": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run --config ../../vitest.config.ts workflow-editor/src"
+  },
+  "dependencies": {
+    "@argocanvas/platform-sdk": "workspace:*",
+    "@argocanvas/ui-platform": "workspace:*",
+    "@argocanvas/workflow-domain": "workspace:*",
+    "@monaco-editor/react": "^4.7.0",
+    "js-yaml": "4.3.2",
+    "lucide-react": "^0.563.0",
+    "monaco-editor": "0.52.2",
+    "monaco-yaml": "^5.5.1",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "reactflow": "^11.11.4"
+  }
+}

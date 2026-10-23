@@ -1,0 +1,22 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: argocanvas
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: 5m
+    nginx.ingress.kubernetes.io/proxy-read-timeout: '60'
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts: [workflows.example.com]
+      secretName: argocanvas-tls
+  rules:
+    - host: workflows.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: argocanvas
+                port: { name: http }

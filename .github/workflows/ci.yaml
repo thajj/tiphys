@@ -1,0 +1,71 @@
+name: Production checks
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
+        with:
+          version: 10.29.3
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm audit:check
+      - run: pnpm lint
+      - run: pnpm test
+      - run: pnpm build
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm e2e
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        if: always()
+        with:
+          name: browser-evidence
+          path: test-results/
+          retention-days: 7
+  container:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - run: docker build -t argocanvas:ci .
+      - run: |
+          docker run -d --name gateway --read-only --cap-drop=ALL --security-opt=no-new-privileges \
+            --tmpfs /data:uid=1000,gid=1000,mode=700 --tmpfs /tmp:uid=1000,gid=1000,mode=700 \
+            -p 127.0.0.1:3000:3000 \
+            -e PUBLIC_URL=https://builder.example -e ARGO_ENDPOINT=http://127.0.0.1:2746 \
+            -e ARGO_NAMESPACE=workflows -e ARGO_TOKEN=ci-argo-token \
+            -e AUTH_PROXY_SECRET=ci-proxy-secret-at-least-32-characters \
+            argocanvas:ci
+          for attempt in $(seq 1 30); do
+            if curl --fail http://127.0.0.1:3000/healthz; then break; fi
+            sleep 1
+          done
+          curl --fail http://127.0.0.1:3000/healthz
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:3000/api/platform/config)" = 401
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:3000/readyz)" = 503
+          docker stop --timeout 30 gateway
+          test "$(docker inspect --format '{{.State.ExitCode}}' gateway)" = 0
+      - run: docker logs gateway
+        if: failure()
+  oidc:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+      - run: node scripts/test-oidc.mjs

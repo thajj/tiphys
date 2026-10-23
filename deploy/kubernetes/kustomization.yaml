@@ -1,0 +1,24 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: argocanvas
+resources:
+  - namespace.yaml
+  - deployment.yaml
+  - service.yaml
+  - ingress.yaml
+  - network-policy.yaml
+configMapGenerator:
+  - name: argocanvas-config
+    literals:
+      - PUBLIC_URL=https://workflows.example.com
+      - ARGO_ENDPOINT=https://argo-server.argo.svc.cluster.local:2746
+      - ARGO_NAMESPACE=workflows
+      - AUTH_EDITOR_GROUPS=workflow-editors
+      - OIDC_ISSUER_URL=https://login.example.com
+      - OIDC_CLIENT_ID=argocanvas
+    files:
+      - oauth2-proxy.yaml
+images:
+  - name: argocanvas
+    newName: ghcr.io/thajj/argocanvas
+    newTag: REPLACE_WITH_COMMIT_SHA

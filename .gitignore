@@ -1,0 +1,40 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-server
+data
+*.tsbuildinfo
+.env
+.env.*
+!.env.example
+!.env.production.example
+dist-ssr
+*.local
+!Dockerfile.local
+playwright-report
+test-results
+.turbo
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Local browser captures
+.playwright-cli/
+output/playwright/
+storybook-static

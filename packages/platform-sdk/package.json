@@ -1,0 +1,11 @@
+{
+  "name": "@argocanvas/platform-sdk",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json --noEmit",
+    "lint": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run --config ../../vitest.config.ts packages/platform-sdk/**/*.test.ts packages/platform-sdk/**/*.test.tsx --passWithNoTests"
+  }
+}

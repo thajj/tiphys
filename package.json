@@ -1,0 +1,43 @@
+{
+  "name": "argocanvas-platform",
+  "private": true,
+  "version": "0.1.0",
+  "license": "Apache-2.0",
+  "type": "module",
+  "packageManager": "pnpm@10.29.3",
+  "engines": {
+    "node": ">=24",
+    "pnpm": ">=10 <11"
+  },
+  "scripts": {
+    "dev": "turbo run dev --filter=@argocanvas/workflow-builder",
+    "build": "turbo run build",
+    "start": "node apps/workflow-builder/dist-server/main.js",
+    "check": "pnpm lint && pnpm test && pnpm build && pnpm e2e",
+    "lint": "turbo run lint",
+    "audit:check": "node scripts/audit.mjs",
+    "test:oidc": "node scripts/test-oidc.mjs",
+    "test": "vitest run --config ./vitest.config.ts --execArgv=--no-experimental-webstorage",
+    "e2e": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.64.0",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.3",
+    "@types/node": "^24.19.2",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^5.2.0",
+    "autoprefixer": "^10.6.1",
+    "jsdom": "^29.1.1",
+    "postcss": "^8.5.30",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "tailwindcss": "^3.4.19",
+    "turbo": "^2.11.7",
+    "typescript": "~5.8.3",
+    "vite": "^6.4.4",
+    "vite-tsconfig-paths": "^5.1.4",
+    "vitest": "^4.1.12"
+  }
+}

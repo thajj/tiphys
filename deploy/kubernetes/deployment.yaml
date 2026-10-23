@@ -1,0 +1,144 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: argocanvas-drafts
+spec:
+  accessModes: [ReadWriteOnce]
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: argocanvas
+spec:
+  replicas: 1
+  # The file store uses a single writer and a persistent volume.
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: argocanvas
+  template:
+    metadata:
+      labels:
+        app: argocanvas
+    spec:
+      automountServiceAccountToken: false
+      terminationGracePeriodSeconds: 30
+      securityContext:
+        runAsNonRoot: true
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: gateway
+          image: argocanvas
+          ports:
+            - containerPort: 3000
+              name: gateway
+          envFrom:
+            - configMapRef:
+                name: argocanvas-config
+          env:
+            - name: AUTH_PROXY_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: argocanvas-secrets
+                  key: auth-proxy-secret
+            - name: ARGO_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: argocanvas-secrets
+                  key: argo-token
+            - name: GEMINI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: argocanvas-secrets
+                  key: gemini-api-key
+                  optional: true
+          startupProbe:
+            httpGet: { path: /healthz, port: gateway }
+            periodSeconds: 2
+            failureThreshold: 30
+          livenessProbe:
+            httpGet: { path: /healthz, port: gateway }
+            periodSeconds: 15
+            timeoutSeconds: 3
+          readinessProbe:
+            httpGet: { path: /readyz, port: gateway }
+            periodSeconds: 15
+            timeoutSeconds: 5
+          resources:
+            requests: { cpu: 100m, memory: 256Mi }
+            limits: { cpu: '1', memory: 1Gi }
+          securityContext:
+            runAsUser: 1000
+            runAsGroup: 1000
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: [ALL] }
+          volumeMounts:
+            - { name: drafts, mountPath: /data }
+            - { name: tmp, mountPath: /tmp }
+        - name: oidc-proxy
+          image: quay.io/oauth2-proxy/oauth2-proxy:v7.14.0
+          args:
+            - --alpha-config=/config/oauth2-proxy.yaml
+            - --reverse-proxy=true
+            - --redirect-url=$(PUBLIC_URL)/oauth2/callback
+            - --email-domain=*
+            - --cookie-name=__Host-argocanvas
+            - --cookie-secure=true
+            - --cookie-httponly=true
+            - --cookie-samesite=lax
+            - --cookie-refresh=10m
+            - --cookie-expire=8h
+            - --skip-provider-button=true
+            - --api-route=^/api/
+            - --request-logging=false
+          ports:
+            - containerPort: 4180
+              name: oidc
+          envFrom:
+            - configMapRef:
+                name: argocanvas-config
+          env:
+            - name: OIDC_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef: { name: argocanvas-secrets, key: oidc-client-secret }
+            - name: OAUTH2_PROXY_COOKIE_SECRET
+              valueFrom:
+                secretKeyRef: { name: argocanvas-secrets, key: cookie-secret }
+          livenessProbe:
+            httpGet: { path: /ping, port: oidc }
+            periodSeconds: 15
+          readinessProbe:
+            httpGet: { path: /ready, port: oidc }
+            periodSeconds: 10
+          resources:
+            requests: { cpu: 50m, memory: 64Mi }
+            limits: { cpu: 500m, memory: 256Mi }
+          securityContext:
+            runAsUser: 2000
+            runAsGroup: 2000
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: [ALL] }
+          volumeMounts:
+            - { name: config, mountPath: /config, readOnly: true }
+            - { name: proxy-secret, mountPath: /secrets, readOnly: true }
+      volumes:
+        - name: drafts
+          persistentVolumeClaim: { claimName: argocanvas-drafts }
+        - name: tmp
+          emptyDir: { sizeLimit: 64Mi }
+        - name: config
+          configMap: { name: argocanvas-config }
+        - name: proxy-secret
+          secret:
+            secretName: argocanvas-secrets
+            defaultMode: 0440
+            items:
+              - { key: auth-proxy-secret, path: auth-proxy-secret }

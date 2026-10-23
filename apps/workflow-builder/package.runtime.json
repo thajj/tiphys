@@ -1,0 +1,5 @@
+{
+  "name": "argocanvas-runtime",
+  "private": true,
+  "type": "module"
+}

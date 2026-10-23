@@ -1,0 +1,15 @@
+{
+  "name": "@argocanvas/ui-platform",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json --noEmit",
+    "lint": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run --config ../../vitest.config.ts packages/ui-platform/**/*.test.ts packages/ui-platform/**/*.test.tsx --passWithNoTests"
+  },
+  "dependencies": {
+    "lucide-react": "^0.563.0",
+    "react": "^19.3.0"
+  }
+}

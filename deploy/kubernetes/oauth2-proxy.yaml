@@ -1,0 +1,42 @@
+# Pinned to OAuth2 Proxy 7.14.0's nested header-source configuration.
+server:
+  bindAddress: 0.0.0.0:4180
+upstreamConfig:
+  upstreams:
+    - id: workflow-builder
+      path: /
+      uri: http://127.0.0.1:3000
+      timeout: 60s
+providers:
+  - id: company
+    provider: oidc
+    clientID: ${OIDC_CLIENT_ID}
+    clientSecret: ${OIDC_CLIENT_SECRET}
+    scope: openid profile email groups
+    code_challenge_method: S256
+    allowedGroups:
+      - workflow-viewers
+      - workflow-editors
+    oidcConfig:
+      issuerURL: ${OIDC_ISSUER_URL}
+      userIDClaim: sub
+      groupsClaim: groups
+      insecureSkipNonce: false
+      insecureSkipIssuerVerification: false
+      insecureAllowUnverifiedEmail: false
+injectRequestHeaders:
+  - name: X-Auth-Proxy-Secret
+    preserveRequestValue: false
+    values:
+      - secretSource:
+          fromFile: /secrets/auth-proxy-secret
+  - name: X-Auth-Request-User
+    preserveRequestValue: false
+    values:
+      - claimSource:
+          claim: user
+  - name: X-Auth-Request-Groups
+    preserveRequestValue: false
+    values:
+      - claimSource:
+          claim: groups

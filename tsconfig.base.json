@@ -1,0 +1,52 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "experimentalDecorators": true,
+    "useDefineForClassFields": false,
+    "module": "ESNext",
+    "lib": [
+      "ES2022",
+      "DOM",
+      "DOM.Iterable"
+    ],
+    "skipLibCheck": true,
+    "types": [
+      "node",
+      "vite/client"
+    ],
+    "moduleResolution": "bundler",
+    "isolatedModules": true,
+    "moduleDetection": "force",
+    "allowJs": false,
+    "jsx": "react-jsx",
+    "allowImportingTsExtensions": true,
+    "noEmit": true,
+    "baseUrl": ".",
+    "paths": {
+      "@argocanvas/platform-sdk": [
+        "./packages/platform-sdk/src/index.ts"
+      ],
+      "@argocanvas/platform-sdk/*": [
+        "./packages/platform-sdk/src/*"
+      ],
+      "@argocanvas/ui-platform": [
+        "./packages/ui-platform/src/index.ts"
+      ],
+      "@argocanvas/ui-platform/*": [
+        "./packages/ui-platform/src/*"
+      ],
+      "@argocanvas/workflow-domain": [
+        "./packages/workflow-domain/src/index.ts"
+      ],
+      "@argocanvas/workflow-domain/*": [
+        "./packages/workflow-domain/src/*"
+      ],
+      "@argocanvas/workflow-editor": [
+        "./packages/workflow-editor/src/index.ts"
+      ],
+      "@argocanvas/workflow-editor/*": [
+        "./packages/workflow-editor/src/*"
+      ]
+    }
+  }
+}

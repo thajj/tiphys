@@ -1,0 +1,19 @@
+{
+  "name": "@argocanvas/workflow-domain",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json --noEmit",
+    "lint": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run --config ../../vitest.config.ts packages/workflow-domain/**/*.test.ts packages/workflow-domain/**/*.test.tsx"
+  },
+  "dependencies": {
+    "dagre": "0.8.5",
+    "js-yaml": "4.3.2",
+    "reactflow": "^11.11.4"
+  },
+  "devDependencies": {
+    "@types/dagre": "0.7.54"
+  }
+}

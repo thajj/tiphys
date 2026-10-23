@@ -1,0 +1,16 @@
+node_modules
+dist
+dist-server
+data
+.env
+.env.*
+**/.env
+**/.env.*
+*.tsbuildinfo
+test-results
+output
+.turbo
+.playwright-cli
+.git
+.env.local
+*.log

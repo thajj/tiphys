@@ -1,0 +1,45 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: hello-pipeline-
+  namespace: workflows
+spec:
+  entrypoint: main
+  activeDeadlineSeconds: 120
+  ttlStrategy:
+    secondsAfterCompletion: 300
+  templates:
+    - name: main
+      dag:
+        tasks:
+          - name: collect
+            template: collect
+          - name: validate
+            template: validate
+            dependencies: [collect]
+          - name: transform
+            template: transform
+            dependencies: [collect]
+          - name: publish
+            template: publish
+            dependencies: [validate, transform]
+    - name: collect
+      script:
+        image: python:3.13-alpine
+        command: [python]
+        source: 'print("Collect sample records")'
+    - name: validate
+      script:
+        image: python:3.13-alpine
+        command: [python]
+        source: 'print("Validate sample records")'
+    - name: transform
+      script:
+        image: python:3.13-alpine
+        command: [python]
+        source: 'print("Transform sample records")'
+    - name: publish
+      script:
+        image: python:3.13-alpine
+        command: [python]
+        source: 'print("Hello from ArgoCanvas")'
