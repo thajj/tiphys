@@ -11,14 +11,30 @@ describe("workflow-builder dev env helpers", () => {
     const recovered = recoverLooseEnvBindings(
       [
         "export ARGO_TOKEN='Bearer demo-token'",
-        "VITE_export ARGO_NAMESPACE=argo",
+        "export ARGO_NAMESPACE=argo",
         "ARGO_ENDPOINT=http://127.0.0.1:2746",
       ].join("\n"),
     );
 
     expect(recovered.ARGO_TOKEN).toBe("Bearer demo-token");
-    expect(recovered.VITE_ARGO_NAMESPACE).toBe("argo");
+    expect(recovered.ARGO_NAMESPACE).toBe("argo");
     expect(recovered.ARGO_ENDPOINT).toBe("http://127.0.0.1:2746");
+  });
+
+  it("ignores legacy VITE_ credential and configuration prefixes", () => {
+    const env = resolveDevProxyEnv(
+      {
+        VITE_ARGO_ENDPOINT: "http://vite.example:2746",
+        VITE_ARGO_NAMESPACE: "vite-namespace",
+        VITE_ARGO_TOKEN: "vite-token",
+      },
+      "/__no_local_environment__",
+      "test",
+    );
+
+    expect(env.argoEndpoint).toBe("http://127.0.0.1:2746");
+    expect(env.argoNamespace).toBe("default");
+    expect(env.argoToken).toBe("");
   });
 
   it("requires an explicit model when development AI is enabled", () => {

@@ -1,0 +1,77 @@
+name: Release image
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+permissions:
+  contents: read
+  packages: write
+  id-token: write
+  attestations: write
+concurrency:
+  group: release-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: docker/setup-qemu-action@29109295f81e9208d7d86ff1c6c12d2833863392 # v3.6.0
+      - uses: docker/setup-buildx-action@b5ca514318bd6ebac0fb2aedd5d36ec1b5c232a2 # v3.10.0
+      - uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567 # v3.3.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - id: meta
+        uses: docker/metadata-action@902fa8ec7d6ecbf8d84d538b9b233a880e428804 # v5.7.0
+        with:
+          images: ghcr.io/${{ github.repository }}
+          flavor: |
+            latest=false
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha,prefix=sha-
+      - name: Build local image for verification
+        uses: docker/build-push-action@471d1dc4e07e5cdedd4c2171150001c434f0b7a4 # v6.15.0
+        with:
+          context: .
+          load: true
+          tags: argocanvas:release-verify
+      - name: Verify restricted container
+        run: |
+          docker run -d --name gateway --read-only --cap-drop=ALL --security-opt=no-new-privileges \
+            --tmpfs /data:uid=1000,gid=1000,mode=700 --tmpfs /tmp:uid=1000,gid=1000,mode=700 \
+            -p 127.0.0.1:3000:3000 \
+            -e PUBLIC_URL=https://builder.example -e ARGO_ENDPOINT=http://127.0.0.1:2746 \
+            -e ARGO_NAMESPACE=workflows -e ARGO_TOKEN=ci-argo-token \
+            -e AUTH_PROXY_SECRET=ci-proxy-secret-at-least-32-characters \
+            argocanvas:release-verify
+          for attempt in $(seq 1 30); do
+            if curl --fail http://127.0.0.1:3000/healthz; then break; fi
+            sleep 1
+          done
+          curl --fail http://127.0.0.1:3000/healthz
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:3000/api/platform/config)" = 401
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:3000/readyz)" = 503
+          docker stop --timeout 30 gateway
+          test "$(docker inspect --format '{{.State.ExitCode}}' gateway)" = 0
+      - name: Build and push multi-arch image
+        id: build-push
+        uses: docker/build-push-action@471d1dc4e07e5cdedd4c2171150001c434f0b7a4 # v6.15.0
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          provenance: mode=max
+          sbom: true
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@c074443f1aee8d4aeeae555aebba3282517141b2 # v2.2.3
+        with:
+          subject-name: ghcr.io/${{ github.repository }}
+          subject-digest: ${{ steps.build-push.outputs.digest }}
+          push-to-registry: true

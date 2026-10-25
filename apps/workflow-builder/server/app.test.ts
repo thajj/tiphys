@@ -220,6 +220,61 @@ describe("production gateway", () => {
       globalThis.fetch = originalFetch;
     }
   });
+
+  it.each([
+    ["timeout", async () => { const err = new Error("timeout"); err.name = "TimeoutError"; throw err; }, 504, /AI service is unavailable/],
+    ["network failure", async () => { throw new TypeError("fetch failed"); }, 502, /AI service is unavailable/],
+    ["upstream error", async () => new Response("Internal error", { status: 500 }), 502, /AI request failed \(500\)/],
+    ["invalid upstream json", async () => new Response("not json", { status: 200, headers: { "Content-Type": "text/plain" } }), 502, /AI returned invalid JSON/],
+    ["body size exceeded", async () => new Response("x".repeat(11 * 1024 * 1024), { status: 200, headers: { "Content-Length": String(11 * 1024 * 1024) } }), 502, /AI response exceeded the size limit/],
+  ])("handles AI failure mode: %s", async (_label, handler, expectedStatus, expectedMessage) => {
+    await app.close();
+    app = await createProductionServer({ ...config, geminiApiKey: "secret-gemini-key", geminiModel: "gemini-2.5-flash" });
+    base = await listen(app.server);
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = async (input, init) => {
+      const url = typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+      if (url.startsWith("https://generativelanguage.googleapis.com/")) {
+        return handler();
+      }
+      return originalFetch(input, init);
+    };
+    try {
+      const response = await request("/api/platform/ai/workflow/generate", { method: "POST", body: JSON.stringify({ description: "Echo pipeline" }) });
+      expect(response.status).toBe(expectedStatus);
+      const data = await response.json();
+      expect(data.message).toMatch(expectedMessage);
+      expect(JSON.stringify(data)).not.toContain("secret-gemini-key");
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
+  it("fails when edit-node response text is not valid JSON", async () => {
+    await app.close();
+    app = await createProductionServer({ ...config, geminiApiKey: "secret-gemini-key", geminiModel: "gemini-2.5-flash" });
+    base = await listen(app.server);
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = async (input, init) => {
+      const url = typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+      if (url.startsWith("https://generativelanguage.googleapis.com/")) {
+        return Response.json({ candidates: [{ content: { parts: [{ text: "not-json-node-data" }] } }] });
+      }
+      return originalFetch(input, init);
+    };
+    try {
+      const response = await request("/api/platform/ai/workflow/edit-node", {
+        method: "POST",
+        body: JSON.stringify({ instruction: "change image", currentData: { name: "step1" } }),
+      });
+      expect(response.status).toBe(502);
+      const data = await response.json();
+      expect(data.message).toBe("AI returned invalid JSON");
+      expect(JSON.stringify(data)).not.toContain("secret-gemini-key");
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
 });
 
 describe("production configuration", () => {

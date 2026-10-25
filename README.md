@@ -37,7 +37,7 @@ cp .env.example .env.local
 pnpm dev
 ```
 
-Open [http://127.0.0.1:3000](http://127.0.0.1:3000). You can explore the editor without a cluster. To connect development workflow requests to Argo, set `ARGO_ENDPOINT`, `ARGO_NAMESPACE`, and `ARGO_TOKEN` in `.env.local`, then restart the server. Optional AI requires both `GEMINI_API_KEY` and `GEMINI_MODEL`; choose a [currently available text model](https://ai.google.dev/gemini-api/docs/deprecations/) for your Google project. The same model handles generation, editing, and analysis. Bare IDs and `models/<ID>` names are accepted; see [.env.example](.env.example). Keep credentials in server-side variables, never variables prefixed with `VITE_`.
+Open [http://127.0.0.1:3000](http://127.0.0.1:3000). You can explore the editor without a cluster. To connect development workflow requests to Argo, set `ARGO_ENDPOINT`, `ARGO_NAMESPACE`, and `ARGO_TOKEN` in `.env.local`, then restart the server. Optional AI requires both `GEMINI_API_KEY` and `GEMINI_MODEL`; choose a [currently available text model](https://ai.google.dev/gemini-api/docs/deprecations/) for your Google project. The same model handles generation, editing, and analysis. Bare IDs and `models/<ID>` names are accepted; see [.env.example](.env.example). Keep credentials in server-side variables, never variables prefixed with `VITE_`. Optional development links to the native Argo UI use `VITE_ARGO_UI_URL`.
 
 **Development mode includes simulations.** Its gateway stores drafts and templates in memory and can return simulated successful workflow runs when Argo is unreachable. A successful development run is not evidence of cluster execution. Use the production gateway and deployment verification procedure for integration testing.
 
@@ -78,7 +78,7 @@ docker build -t argocanvas:local .
 kubectl kustomize deploy/kubernetes
 ```
 
-The second command renders the example manifests for inspection. Replace the image, hostname, OIDC settings, ingress selectors, and storage configuration, and provision Secrets and TLS before applying them. `pnpm dev` and `vite preview` are development tools; deploy the root `Dockerfile`.
+The second command renders the example manifests for inspection. Replace the image, hostname, OIDC settings, ingress selectors, and storage configuration, and provision Secrets and TLS before applying them. `pnpm dev` and `vite preview` are development tools; deploy the published release image or build from the root `Dockerfile`.
 
 ### Current boundaries
 
@@ -129,10 +129,14 @@ The [CI workflow](.github/workflows/ci.yaml) checks the workspace, browser behav
 
 ## Contributing and support
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for the development workflow, checks, and pull-request guidance. Bug reports should include reproduction steps, the commit being tested, browser/runtime versions, and whether the problem occurs in development or production mode. Remove tokens, personal information, and sensitive workflow content before sharing logs or screenshots.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the development workflow, checks, and pull-request guidance. Contributors are expected to adhere to the [Code of Conduct](CODE_OF_CONDUCT.md). Bug reports should include reproduction steps, the commit being tested, browser/runtime versions, and whether the problem occurs in development or production mode. Remove tokens, personal information, and sensitive workflow content before sharing logs or screenshots.
 
 Use [GitHub Issues](https://github.com/thajj/ArgoCanvas/issues) for bugs and feature proposals. See [SECURITY.md](SECURITY.md) for security reporting and the project's current support status.
 
 ## License
 
 Licensed under the [Apache License 2.0](LICENSE). Third-party dependencies retain their own licenses; provenance for the vendored Argo schema is documented [alongside the schema](apps/workflow-builder/public/schemas/README.md).
+
+## Trademarks
+
+ArgoCanvas is an independent project. It is not affiliated with, endorsed by, or sponsored by the Argo Project, the Cloud Native Computing Foundation, or The Linux Foundation. Argo is a trademark of The Linux Foundation. Gemini is a trademark of Google LLC.

@@ -29,10 +29,10 @@ export const recoverLooseEnvBindings = (contents: string) => {
       return;
     }
 
-    const exportMatch = trimmed.match(/^(?:(VITE_)?)export\s+([A-Z0-9_]+)\s*=\s*(.+)$/);
+    const exportMatch = trimmed.match(/^export\s+([A-Z0-9_]+)\s*=\s*(.+)$/);
     if (exportMatch) {
-      const [, prefix = "", key, value] = exportMatch;
-      recovered[`${prefix}${key}`] = stripWrappingQuotes(value);
+      const [, key, value] = exportMatch;
+      recovered[key] = stripWrappingQuotes(value);
       return;
     }
 
@@ -99,10 +99,9 @@ export const resolveDevProxyEnv = (
   }
 
   return {
-    argoEndpoint:
-      resolved.ARGO_ENDPOINT || resolved.VITE_ARGO_ENDPOINT || "http://127.0.0.1:2746",
-    argoNamespace: resolved.ARGO_NAMESPACE || resolved.VITE_ARGO_NAMESPACE || "default",
-    argoToken: resolved.ARGO_TOKEN || resolved.VITE_ARGO_TOKEN || "",
+    argoEndpoint: resolved.ARGO_ENDPOINT || "http://127.0.0.1:2746",
+    argoNamespace: resolved.ARGO_NAMESPACE || "default",
+    argoToken: resolved.ARGO_TOKEN || "",
     geminiApiKey: resolved.GEMINI_API_KEY || "",
     geminiModel,
   };

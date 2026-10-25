@@ -1,6 +1,6 @@
 # Contributing to ArgoCanvas
 
-ArgoCanvas helps people design workflows visually, inspect their YAML, and run them on Argo. Start with the [README](README.md) for setup and the [production guide](docs/production.md) for deployment behavior. For larger changes, open an issue describing the user problem and proposed scope before implementation. Keep pull requests focused enough to review and test independently.
+ArgoCanvas helps people design workflows visually, inspect their YAML, and run them on Argo. Start with the [README](README.md) for setup, the [Code of Conduct](CODE_OF_CONDUCT.md) for community standards, and the [production guide](docs/production.md) for deployment behavior. For larger changes, open an issue describing the user problem and proposed scope before implementation. Keep pull requests focused enough to review and test independently.
 
 ## Local setup
 
@@ -74,7 +74,7 @@ node scripts/render-showcase.mjs INPUT_WEBM --timing SHOWCASE_TIMING_JSON
 
 Replace `INPUT_WEBM` and `SHOWCASE_TIMING_JSON` with the recording and `showcase-timing.json` attached to the same successful Playwright test. They are saved under that test's `test-results/` directory. The recording is opt-in and does not run during the regular browser suite. Its assertions verify the demonstrated actions through the production gateway before the clip is ready to publish; upstream responses still come from deterministic fixtures.
 
-The timing file contains trim points, reading holds, and camera cues in the original recording's time and coordinate space. The renderer adds gentle zooms with smooth starts and stops inside a fixed, rounded frame; the caption footer stays stationary. The MP4 renders camera motion at 60 fps from a 25 fps UI recording. The GIF uses 12 fps, with its width adjusted to stay within the renderer's size limit. Keep both outputs and the static screenshots together.
+The timing file contains trim points, reading holds, and camera cues in the original recording's time and coordinate space. The renderer adds gentle zooms with smooth starts and stops inside a fixed, rounded frame; the caption footer stays stationary. The MP4 renders camera motion at 60 fps from a 25 fps UI recording. The GIF uses 10 fps, with its width adjusted to stay within the renderer's 5 MiB size limit. Keep both outputs and the static screenshots together.
 
 Watch the complete MP4 and GIF before committing them. Check that the opening graph fits, focused controls remain visible, cursor paths and camera moves are smooth, and captions stay legible at the README's display size. Leave enough still time to read the YAML, AI response, and logs. Confirm that the sample-service disclosure remains visible and that every chapter reflects a supported feature. The renderer checks decoding, duration, and file size; it does not replace this visual review.
 

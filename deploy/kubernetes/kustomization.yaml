@@ -21,4 +21,4 @@ configMapGenerator:
 images:
   - name: argocanvas
     newName: ghcr.io/thajj/argocanvas
-    newTag: REPLACE_WITH_COMMIT_SHA
+    newTag: 0.1.0

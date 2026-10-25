@@ -101,23 +101,23 @@ try {
   // Prefer a smaller frame over dropping animation frames when camera motion
   // makes the README loop large. The full-resolution MP4 is always preserved.
   let gifBytes = 0;
-  for (const [width, colors] of [[960, 128], [896, 128], [800, 128], [800, 96]]) {
+  for (const [width, colors] of [[800, 128], [760, 128], [720, 128], [720, 96]]) {
     run("ffmpeg", ["-hide_banner", "-loglevel", "error", "-y", "-i", video, "-filter_complex",
-      `fps=12,scale=${width}:-2:flags=lanczos,split[a][b];[a]palettegen=max_colors=${colors}:stats_mode=diff[p];[b][p]paletteuse=dither=none:diff_mode=rectangle`,
+      `fps=10,scale=${width}:-2:flags=lanczos,split[a][b];[a]palettegen=max_colors=${colors}:stats_mode=diff[p];[b][p]paletteuse=dither=none:diff_mode=rectangle`,
       "-loop", "0", unoptimizedGif]);
     // Lossless frame/transparency optimization keeps longer reading holds small
     // without introducing noise around text or lowering the frame rate.
     run("gifsicle", ["--optimize=3", unoptimizedGif, "--output", gif]);
     gifBytes = (await stat(gif)).size;
     console.log(`GIF candidate: ${width}px, ${colors} colors, ${(gifBytes / 1024 / 1024).toFixed(2)} MiB`);
-    if (gifBytes <= 10 * 1024 * 1024) break;
+    if (gifBytes <= 5 * 1024 * 1024) break;
   }
   const videoInfo = probe(video);
   const gifInfo = probe(gif);
   if (videoInfo.streams[0]?.codec_name !== "h264" || videoInfo.streams[0]?.pix_fmt !== "yuv420p") throw new Error("Unexpected video encoding");
   if (Math.abs(Number(videoInfo.format.duration) - (end - start)) > 0.2) throw new Error("Encoded duration differs from the selected range");
   if (Math.abs(Number(gifInfo.format.duration) - Number(videoInfo.format.duration)) > 0.25) throw new Error("GIF and MP4 durations differ");
-  if (gifBytes > 10 * 1024 * 1024) throw new Error(`GIF is ${(gifBytes / 1024 / 1024).toFixed(2)} MiB; shorten the recording before publishing`);
+  if (gifBytes > 5 * 1024 * 1024) throw new Error(`GIF is ${(gifBytes / 1024 / 1024).toFixed(2)} MiB; shorten the recording before publishing`);
   // Decode both entire files before replacing the committed showcase.
   for (const file of [video, gif]) run("ffmpeg", ["-v", "error", "-xerror", "-i", file, "-f", "null", "-"]);
   await rename(video, path.join(destination, path.basename(video)));
