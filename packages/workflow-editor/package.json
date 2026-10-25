@@ -15,10 +15,10 @@
     "@monaco-editor/react": "^4.7.0",
     "js-yaml": "4.3.2",
     "lucide-react": "^0.563.0",
-    "monaco-editor": "0.52.2",
+    "monaco-editor": "0.57.0",
     "monaco-yaml": "^5.5.1",
-    "react": "^19.3.0",
-    "react-dom": "^19.3.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
     "reactflow": "^11.11.4"
   }
 }
