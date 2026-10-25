@@ -12,7 +12,11 @@ Cookies are configured to expire after 8 hours and refresh after 10 minutes. The
 
 ## Prepare the environment
 
-1. Build and publish `Dockerfile` to your registry under an immutable commit tag or digest. Change `deploy/kubernetes/kustomization.yaml` to reference that image. This repository's CI builds and tests images but does not deploy or publish them automatically.
+1. Tagged releases publish signed, multi-architecture images to GitHub Packages under `ghcr.io/thajj/argocanvas:<version>` with SBOM and build provenance attestations. Verify the published image before deployment:
+   ```sh
+   gh attestation verify oci://ghcr.io/thajj/argocanvas:0.1.0 -R thajj/ArgoCanvas
+   ```
+   You can also build and publish your own image from `Dockerfile` under an immutable commit tag or digest. Adjust `deploy/kubernetes/kustomization.yaml` to reference the image you intend to deploy.
 2. Set the public origin, Argo endpoint and namespace, OIDC issuer/client ID, and editor groups in the ConfigMap generator. Set the same hostname in `ingress.yaml`. Replace the ingress class and NetworkPolicy namespace/pod selectors for your actual ingress controller. Use a CNI that enforces NetworkPolicy, and provision the referenced TLS Secret.
 3. Create `argocanvas-secrets` in namespace `argocanvas` with keys `auth-proxy-secret`, `argo-token`, `oidc-client-secret`, and `cookie-secret`. Generate at least 32 random bytes for the proxy secret and encode them as a header-safe string. The cookie secret is a base64-encoded 32-byte random value. Use a secret manager or files with `kubectl create secret generic --from-file`; keep secret values out of Git, shell history, and deployment logs. The proxy reads `auth-proxy-secret` from the mounted file and the gateway reads the same value from its environment. Generate it without a trailing newline.
 4. Enable Argo Server's client authentication. Use the namespaced service account and Role in `deploy/argo-rbac.example.yaml`, adjusted to the actual execution namespace, to obtain the gateway credential. Do not grant cluster-admin or reuse an administrator token. Rotate the credential before expiration and restart the Deployment after environment-backed secret changes. Argo's own authorization remains authoritative. See [Argo access-token guidance](https://argo-workflows.readthedocs.io/en/latest/access-token/).

@@ -16,6 +16,25 @@ const normalizeResource = (value: unknown, kind: "Workflow" | "WorkflowTemplate"
 };
 class HttpError extends Error { constructor(public status: number, message: string) { super(message); } }
 const fail = (status: number, message: string): never => { throw new HttpError(status, message); };
+const readLimitedResponse = async (response: Response, limitError: string) => {
+  const declared = Number(response.headers.get("content-length") || 0);
+  if (declared > MAX_UPSTREAM_BYTES) fail(502, limitError);
+  const reader = response.body?.getReader();
+  const chunks: Uint8Array[] = [];
+  let length = 0;
+  if (reader) {
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        length += value.length;
+        if (length > MAX_UPSTREAM_BYTES) fail(502, limitError);
+        chunks.push(value);
+      }
+    } finally { await reader.cancel().catch(() => {}); }
+  }
+  return Buffer.concat(chunks).toString("utf8");
+};
 const object = (value: unknown): Record<string, any> => {
   if (!value || typeof value !== "object" || Array.isArray(value)) fail(400, "Expected a JSON object");
   return value as Record<string, any>;
@@ -64,21 +83,7 @@ export async function createProductionServer(config: ServerConfig) {
         redirect: "error",
         signal: AbortSignal.timeout(timeoutMs),
       });
-      const reader = response.body?.getReader();
-      const chunks: Uint8Array[] = [];
-      let length = 0;
-      if (reader) {
-        try {
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            length += value.length;
-            if (length > MAX_UPSTREAM_BYTES) fail(502, "Argo response exceeded the size limit");
-            chunks.push(value);
-          }
-        } finally { await reader.cancel().catch(() => {}); }
-      }
-      const text = Buffer.concat(chunks).toString("utf8");
+      const text = await readLimitedResponse(response, "Argo response exceeded the size limit");
       if (!response.ok) {
         // Do not return raw upstream bodies, URLs, or credentials to users.
         fail(response.status >= 400 && response.status < 500 ? response.status : 502, `Argo request failed (${response.status})`);
@@ -285,19 +290,32 @@ export async function createProductionServer(config: ServerConfig) {
           const contents = name === "generate" ? `Return only raw Argo Workflow YAML for: ${body.description}` :
             name === "edit-node" ? `Return only updated Argo node JSON. Current: ${JSON.stringify(body.currentData)} Instruction: ${body.instruction}` :
               `Review this workflow graph for validation, data flow, and Argo best practices: ${JSON.stringify(body)}`;
-          const aiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/${geminiModelPath(config.geminiModel!)}:generateContent`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json", "x-goog-api-key": config.geminiApiKey },
-            body: JSON.stringify({
-              contents: [{ role: "user", parts: [{ text: contents }] }],
-              generationConfig: { maxOutputTokens: 8192, ...(name === "edit-node" ? { responseMimeType: "application/json" } : {}) },
-            }),
-            signal: AbortSignal.timeout(config.upstreamTimeoutMs),
-          });
-          if (!aiResponse.ok) fail(502, `AI request failed (${aiResponse.status})`);
-          const payload = (await aiResponse.json()) as { candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }> };
-          const text = (payload.candidates?.[0]?.content?.parts || []).map(part => part.text || "").join("");
-          json(res, 200, { content: name === "edit-node" ? JSON.parse(text || "{}") : text }); return;
+          let payload: { candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }> };
+          try {
+            const aiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/${geminiModelPath(config.geminiModel!)}:generateContent`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json", "x-goog-api-key": config.geminiApiKey },
+              body: JSON.stringify({
+                contents: [{ role: "user", parts: [{ text: contents }] }],
+                generationConfig: { maxOutputTokens: 8192, ...(name === "edit-node" ? { responseMimeType: "application/json" } : {}) },
+              }),
+              signal: AbortSignal.timeout(config.upstreamTimeoutMs),
+            });
+            if (!aiResponse.ok) fail(502, `AI request failed (${aiResponse.status})`);
+            const raw = await readLimitedResponse(aiResponse, "AI response exceeded the size limit");
+            try { payload = JSON.parse(raw); }
+            catch { return fail(502, "AI returned invalid JSON"); }
+          } catch (error) {
+            if (error instanceof HttpError) throw error;
+            fail((error as Error).name === "TimeoutError" ? 504 : 502, "AI service is unavailable");
+          }
+          const text = (payload!.candidates?.[0]?.content?.parts || []).map(part => part.text || "").join("");
+          let content: unknown = text;
+          if (name === "edit-node") {
+            try { content = JSON.parse(text || "{}"); }
+            catch { return fail(502, "AI returned invalid JSON"); }
+          }
+          json(res, 200, { content }); return;
         }
         fail(404, "API route not found");
       }

@@ -8,7 +8,7 @@ upstreamConfig:
       uri: http://127.0.0.1:3000
       timeout: 60s
 providers:
-  - id: company
+  - id: oidc
     provider: oidc
     clientID: ${OIDC_CLIENT_ID}
     clientSecret: ${OIDC_CLIENT_SECRET}

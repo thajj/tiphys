@@ -1,0 +1,34 @@
+name: Feature proposal
+description: Propose a new feature, workflow capability, or enhancement
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please check existing issues and discussions before opening a proposal. For complex changes,
+        describing the problem and proposed scope before implementation helps keep pull requests focused.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or use case
+      description: What problem does this solve, or what workflow task is currently difficult or unsupported?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: Describe the intended visual or runtime behavior and how users will interact with it.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Any other approaches or existing workarounds considered.
+  - type: textarea
+    id: boundaries
+    attributes:
+      label: Operational considerations
+      description: Does this affect namespace scoping, gateway permissions, RBAC, or persistent draft storage?

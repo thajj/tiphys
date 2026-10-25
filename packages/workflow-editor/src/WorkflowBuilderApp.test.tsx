@@ -142,7 +142,10 @@ function initializeTestRuntime(
 }
 
 describe("WorkflowBuilder shell alignment", () => {
-  afterEach(() => vi.useRealTimers());
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.unstubAllEnvs();
+  });
 
   it("orders slow autosaves and only marks the latest edit as saved", async () => {
     const onDirtyStateChange = vi.fn();
@@ -544,6 +547,7 @@ describe("WorkflowBuilder shell alignment", () => {
         resourceVersion: "42",
       };
     });
+    vi.stubEnv("VITE_ARGO_UI_URL", "https://argo.example");
     const shell = createShell();
     initializeTestRuntime(shell, {
       async listWorkflowPage(query) {
@@ -580,8 +584,34 @@ describe("WorkflowBuilder shell alignment", () => {
 
     await waitFor(() => {
       expect(screen.getByTestId("workflow-inspector-link").getAttribute("href")).toEqual(
-        expect.stringContaining("/workflows/ml-platform/data-runnable-sim-a1b2c"),
+        "https://argo.example/workflows/ml-platform/data-runnable-sim-a1b2c",
       );
+    });
+  });
+
+  it("omits the native Argo inspector link when VITE_ARGO_UI_URL is unset", async () => {
+    const shell = createShell();
+    initializeTestRuntime(shell, {
+      async listWorkflowPage() {
+        return { items: sampleWorkflowRuns, resourceVersion: "42" };
+      },
+      async listWorkflows() {
+        return sampleWorkflowRuns;
+      },
+    });
+
+    render(
+      <PlatformThemeProvider>
+        <WorkflowBuilderPreviewApp shell={shell} />
+      </PlatformThemeProvider>,
+    );
+
+    fireEvent.click(await screen.findByTestId("platform-rail-item-workflows"));
+    expect(await screen.findByTestId("workflow-row-data-runnable-sim-a1b2c")).toBeTruthy();
+    fireEvent.click(screen.getByTestId("workflow-row-data-runnable-sim-a1b2c"));
+
+    await waitFor(() => {
+      expect(screen.queryByTestId("workflow-inspector-link")).toBeNull();
     });
   });
 

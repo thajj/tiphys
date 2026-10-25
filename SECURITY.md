@@ -2,13 +2,20 @@
 
 ## Reporting a vulnerability
 
-This project has not yet published a dedicated private vulnerability-reporting address or response-time commitment. Ask the repository owner for a private reporting channel before sharing sensitive findings. If GitHub offers **Report a vulnerability** in this repository's Security tab, use that private reporting flow.
+Report vulnerabilities privately through GitHub: open the repository's **Security** tab and choose
+**Report a vulnerability** (https://github.com/thajj/ArgoCanvas/security/advisories/new).
+Do not open a public issue for suspected vulnerabilities.
 
-Do not place credentials, personal data, or exploit details in a public issue. Once a private channel is established, include the affected commit or version, deployment mode, impact, and a minimal reproduction using dummy credentials and harmless workloads.
+Include the affected commit or release, deployment mode (development or production gateway), impact,
+and a minimal reproduction using dummy credentials and harmless workloads. Do not include real tokens,
+personal data, or production workflow content.
 
-## Support status
+This is a volunteer-maintained project. The maintainer aims to acknowledge reports within 7 days and
+will coordinate a fix and disclosure timeline with the reporter.
 
-No supported-release matrix or security maintenance schedule has been established yet. Review the current dependency audit and deployment requirements when preparing a release. The [dependency audit policy](docs/production.md#dependency-audits) fails on moderate-or-higher findings and incomplete audits, with no advisory exceptions.
+## Supported versions
+
+Only the latest release receives security fixes while the project is pre-1.0. Review the current dependency audit and deployment requirements when preparing a release. The [dependency audit policy](docs/production.md#dependency-audits) fails on moderate-or-higher findings and incomplete audits, with no advisory exceptions.
 
 ## Deployment security model
 

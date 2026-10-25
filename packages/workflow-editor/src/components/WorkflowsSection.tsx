@@ -99,9 +99,11 @@ const getStatusTone = (phase?: string): "default" | "success" | "warning" | "dan
   return "default";
 };
 
+const getArgoUiBase = () => `${import.meta.env.VITE_ARGO_UI_URL || ""}`.replace(/\/+$/, "");
+
 const createArgoWorkflowHref = (workflow: Workflow) => {
-  const base = `${import.meta.env.VITE_ARGO_ENDPOINT || ""}`.replace(/\/$/, "");
-  const path = `/workflows/${workflow.metadata.namespace}/${workflow.metadata.name}`;
+  const base = getArgoUiBase();
+  const path = `/workflows/${encodeURIComponent(workflow.metadata.namespace)}/${encodeURIComponent(workflow.metadata.name)}`;
   return base ? `${base}${path}` : path;
 };
 
@@ -208,7 +210,8 @@ const parseTemplateYaml = (
 
 export function WorkflowsSection(props: WorkflowsSectionProps) {
   const runtime = getWorkflowRuntime();
-  const canOpenNativeArgoUi = runtime.shell.permissions.canOpenNativeArgoUi !== false;
+  const canOpenNativeArgoUi =
+    !!getArgoUiBase() && runtime.shell.permissions.canOpenNativeArgoUi !== false;
   const canManageWorkflowTemplates =
     runtime.shell.featureFlags.workflowTemplateManagement !== false &&
     runtime.shell.permissions.canManageWorkflowTemplates !== false;
