@@ -1,10 +1,10 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: argocanvas
+  name: tiphys
 spec:
   selector:
-    app: argocanvas
+    app: tiphys
   ports:
     - name: http
       port: 80

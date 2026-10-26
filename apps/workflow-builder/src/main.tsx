@@ -8,8 +8,8 @@ import {
   defaultFeatureFlags,
   defaultPermissions,
   type WorkflowBuilderProps,
-} from "@argocanvas/platform-sdk";
-import { PlatformThemeProvider } from "@argocanvas/ui-platform";
+} from "@tiphys/platform-sdk";
+import { PlatformThemeProvider } from "@tiphys/ui-platform";
 import {
   WorkflowBuilderPreviewApp,
   createFetchAiClient,
@@ -17,7 +17,7 @@ import {
   createFetchWorkflowTemplatesClient,
   createFetchWorkflowsClient,
   initializeWorkflowRuntime,
-} from "@argocanvas/workflow-editor";
+} from "@tiphys/workflow-editor";
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {

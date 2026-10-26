@@ -1,5 +1,5 @@
 blank_issues_enabled: false
 contact_links:
   - name: Report a security vulnerability
-    url: https://github.com/thajj/ArgoCanvas/security/advisories/new
+    url: https://github.com/thajj/tiphys/security/advisories/new
     about: Please report security vulnerabilities privately rather than through public issues.

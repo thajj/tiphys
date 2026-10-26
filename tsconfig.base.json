@@ -23,28 +23,28 @@
     "noEmit": true,
     "baseUrl": ".",
     "paths": {
-      "@argocanvas/platform-sdk": [
+      "@tiphys/platform-sdk": [
         "./packages/platform-sdk/src/index.ts"
       ],
-      "@argocanvas/platform-sdk/*": [
+      "@tiphys/platform-sdk/*": [
         "./packages/platform-sdk/src/*"
       ],
-      "@argocanvas/ui-platform": [
+      "@tiphys/ui-platform": [
         "./packages/ui-platform/src/index.ts"
       ],
-      "@argocanvas/ui-platform/*": [
+      "@tiphys/ui-platform/*": [
         "./packages/ui-platform/src/*"
       ],
-      "@argocanvas/workflow-domain": [
+      "@tiphys/workflow-domain": [
         "./packages/workflow-domain/src/index.ts"
       ],
-      "@argocanvas/workflow-domain/*": [
+      "@tiphys/workflow-domain/*": [
         "./packages/workflow-domain/src/*"
       ],
-      "@argocanvas/workflow-editor": [
+      "@tiphys/workflow-editor": [
         "./packages/workflow-editor/src/index.ts"
       ],
-      "@argocanvas/workflow-editor/*": [
+      "@tiphys/workflow-editor/*": [
         "./packages/workflow-editor/src/*"
       ]
     }

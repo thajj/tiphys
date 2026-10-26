@@ -9,8 +9,8 @@ import path from "node:path";
 import assert from "node:assert/strict";
 
 const run = promisify(execFile);
-const name = `argocanvas-oidc-test-${process.pid}`;
-const directory = await mkdtemp(path.join(tmpdir(), "argocanvas-oidc-"));
+const name = `tiphys-oidc-test-${process.pid}`;
+const directory = await mkdtemp(path.join(tmpdir(), "tiphys-oidc-"));
 const secret = "oidc-integration-only-proxy-secret-at-least-32-characters";
 const { privateKey, publicKey } = generateKeyPairSync("rsa", { modulusLength: 2048 });
 const jwk = { ...publicKey.export({ format: "jwk" }), kid: "test-key", alg: "RS256", use: "sig" };

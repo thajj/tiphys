@@ -3,7 +3,7 @@ import type {
   WorkflowListQuery,
   WorkflowLogStreamChunk,
   WorkflowTemplateSummary,
-} from "@argocanvas/workflow-domain";
+} from "@tiphys/workflow-domain";
 import { getWorkflowRuntime } from "../platform/runtime";
 
 export const argoService = {

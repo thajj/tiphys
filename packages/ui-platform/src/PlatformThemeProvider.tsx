@@ -33,7 +33,7 @@ export type PlatformThemeConfig = {
 const DEFAULT_STORAGE_KEY = "wb-platform-theme";
 
 export const platformThemeConfig: Record<PlatformTheme, PlatformThemeConfig> = {
-  // Neutral editor chrome + ArgoCanvas logo blue (#2563eb).
+  // Neutral editor chrome + Tiphys logo blue (#2563eb).
   dark: {
     backgroundGradient: "none",
     cssVars: {

@@ -1,7 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import type { WorkflowBuilderProps } from "@argocanvas/platform-sdk";
-import { PlatformThemeProvider } from "@argocanvas/ui-platform";
+import type { WorkflowBuilderProps } from "@tiphys/platform-sdk";
+import { PlatformThemeProvider } from "@tiphys/ui-platform";
 import {
   WorkflowBuilderApp,
   createFetchAiClient,
@@ -9,7 +9,7 @@ import {
   createFetchWorkflowTemplatesClient,
   createFetchWorkflowsClient,
   initializeWorkflowRuntime,
-} from "@argocanvas/workflow-editor";
+} from "@tiphys/workflow-editor";
 
 const roots = new WeakMap<Element, ReactDOM.Root>();
 

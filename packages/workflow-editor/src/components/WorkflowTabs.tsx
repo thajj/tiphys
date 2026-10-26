@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Copy, Plus, X, FileCode } from 'lucide-react';
-import { Button, Tooltip, cn } from '@argocanvas/ui-platform';
-import type { WorkflowSession } from '@argocanvas/workflow-domain';
+import { Button, Tooltip, cn } from '@tiphys/ui-platform';
+import type { WorkflowSession } from '@tiphys/workflow-domain';
 
 interface WorkflowTabsProps {
   sessions: WorkflowSession[];

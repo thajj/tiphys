@@ -27,7 +27,7 @@ jobs:
       - id: meta
         uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
         with:
-          images: ghcr.io/thajj/argocanvas
+          images: ghcr.io/thajj/tiphys
           flavor: |
             latest=false
           tags: |
@@ -39,7 +39,7 @@ jobs:
         with:
           context: .
           load: true
-          tags: argocanvas:release-verify
+          tags: tiphys:release-verify
       - name: Verify restricted container
         run: |
           docker run -d --name gateway --read-only --cap-drop=ALL --security-opt=no-new-privileges \
@@ -48,7 +48,7 @@ jobs:
             -e PUBLIC_URL=https://builder.example -e ARGO_ENDPOINT=http://127.0.0.1:2746 \
             -e ARGO_NAMESPACE=workflows -e ARGO_TOKEN=ci-argo-token \
             -e AUTH_PROXY_SECRET=ci-proxy-secret-at-least-32-characters \
-            argocanvas:release-verify
+            tiphys:release-verify
           for attempt in $(seq 1 30); do
             if curl --fail http://127.0.0.1:3000/healthz; then break; fi
             sleep 1
@@ -72,6 +72,6 @@ jobs:
       - name: Attest build provenance
         uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
         with:
-          subject-name: ghcr.io/thajj/argocanvas
+          subject-name: ghcr.io/thajj/tiphys
           subject-digest: ${{ steps.build-push.outputs.digest }}
           push-to-registry: true

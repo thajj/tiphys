@@ -1,6 +1,6 @@
-# Contributing to ArgoCanvas
+# Contributing to Tiphys
 
-ArgoCanvas helps people design workflows visually, inspect their YAML, and run them on Argo. Start with the [README](README.md) for setup, the [Code of Conduct](CODE_OF_CONDUCT.md) for community standards, and the [production guide](docs/production.md) for deployment behavior. For larger changes, open an issue describing the user problem and proposed scope before implementation. Keep pull requests focused enough to review and test independently.
+Tiphys helps people design workflows visually, inspect their YAML, and run them on Argo. Start with the [README](README.md) for setup, the [Code of Conduct](CODE_OF_CONDUCT.md) for community standards, and the [production guide](docs/production.md) for deployment behavior. For larger changes, open an issue describing the user problem and proposed scope before implementation. Keep pull requests focused enough to review and test independently.
 
 ## Local setup
 
@@ -61,11 +61,11 @@ The capture updates three files:
 - `docs/images/yaml-editor.png` — the editable manifest and local validation.
 - `docs/images/ai-assistant.png` — the enabled workflow-generation assistant.
 
-Inspect every image for current ArgoCanvas branding, legible text, unclipped controls, and accurate sample content before committing it. Verify the supported actions through the test suite; an enabled control alone does not prove its request succeeds. Keep the README's fixture captions alongside the images. Capture only the supported workflow editor, templates, runs, and optional AI features.
+Inspect every image for current Tiphys branding, legible text, unclipped controls, and accurate sample content before committing it. Verify the supported actions through the test suite; an enabled control alone does not prove its request succeeds. Keep the README's fixture captions alongside the images. Capture only the supported workflow editor, templates, runs, and optional AI features.
 
 ### Captioned walkthrough
 
-To re-record and encode the opt-in README walkthrough (`docs/media/argocanvas-showcase.gif` and `docs/media/argocanvas-showcase.mp4`), ensure `ffmpeg` (`libx264`), `ffprobe`, and `gifsicle` are on `PATH`, then run:
+To re-record and encode the opt-in README walkthrough (`docs/media/tiphys-showcase.gif` and `docs/media/tiphys-showcase.mp4`), ensure `ffmpeg` (`libx264`), `ffprobe`, and `gifsicle` are on `PATH`, then run:
 
 ```sh
 RUN_SHOWCASE=1 pnpm exec playwright test tests/e2e/showcase.spec.ts --workers=1

@@ -1,5 +1,5 @@
 import { Terminal } from "lucide-react";
-import { PlatformEmptyState } from "@argocanvas/ui-platform";
+import { PlatformEmptyState } from "@tiphys/ui-platform";
 
 export function WorkflowLogsView(props: {
   logs: string;

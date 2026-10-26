@@ -1,5 +1,5 @@
 import React, { useId } from 'react';
-import { cn } from '@argocanvas/ui-platform';
+import { cn } from '@tiphys/ui-platform';
 
 export const fieldControlClassName =
   'w-full rounded-xl border border-[rgb(var(--wb-color-border-subtle)/0.38)] bg-[rgb(var(--wb-color-bg-surface))] px-3 py-2 text-sm text-[rgb(var(--wb-color-text-primary))] placeholder:text-[rgb(var(--wb-color-text-secondary)/0.7)] outline-none transition-colors focus-visible:border-[rgb(var(--wb-color-border-subtle)/0.7)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgb(var(--wb-color-accent-primary)/0.22)] focus-visible:ring-offset-2 focus-visible:ring-offset-[rgb(var(--wb-color-bg-base))] disabled:opacity-50';

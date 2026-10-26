@@ -1,4 +1,4 @@
-import type { WorkflowTemplateSummary } from "@argocanvas/workflow-domain";
+import type { WorkflowTemplateSummary } from "@tiphys/workflow-domain";
 import { getWorkflowRuntime } from "../platform/runtime";
 
 export const platformResourceService = {

@@ -1,9 +1,9 @@
-# ArgoCanvas security
+# Tiphys security
 
 ## Reporting a vulnerability
 
 Report vulnerabilities privately through GitHub: open the repository's **Security** tab and choose
-**Report a vulnerability** (https://github.com/thajj/ArgoCanvas/security/advisories/new).
+**Report a vulnerability** (https://github.com/thajj/tiphys/security/advisories/new).
 Do not open a public issue for suspected vulnerabilities.
 
 Include the affected commit or release, deployment mode (development or production gateway), impact,
@@ -19,6 +19,6 @@ Only the latest release receives security fixes while the project is pre-1.0. Re
 
 ## Deployment security model
 
-ArgoCanvas's production configuration is intended for a trusted team within one Argo namespace. The OIDC proxy authenticates users, and the gateway checks the proxy proof and editor groups. Workflows, templates, and logs are shared across authorized namespace users; drafts are scoped to the authenticated subject.
+Tiphys's production configuration is intended for a trusted team within one Argo namespace. The OIDC proxy authenticates users, and the gateway checks the proxy proof and editor groups. Workflows, templates, and logs are shared across authorized namespace users; drafts are scoped to the authenticated subject.
 
 Editor access allows submitting executable workloads. Kubernetes runner RBAC, admission policies, network isolation, and credential scope remain part of the deployment's security boundary. Follow the [production deployment guide](docs/production.md) and never expose the development server or gateway port directly to untrusted clients.

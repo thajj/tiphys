@@ -1,5 +1,5 @@
 {
-  "name": "@argocanvas/workflow-builder",
+  "name": "@tiphys/workflow-builder",
   "private": true,
   "version": "0.1.0",
   "type": "module",
@@ -12,9 +12,9 @@
     "test": "vitest run --config ../../vitest.config.ts apps/workflow-builder/**/*.test.ts apps/workflow-builder/**/*.test.tsx --passWithNoTests"
   },
   "dependencies": {
-    "@argocanvas/platform-sdk": "workspace:*",
-    "@argocanvas/ui-platform": "workspace:*",
-    "@argocanvas/workflow-editor": "workspace:*",
+    "@tiphys/platform-sdk": "workspace:*",
+    "@tiphys/ui-platform": "workspace:*",
+    "@tiphys/workflow-editor": "workspace:*",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "reactflow": "^11.11.4"

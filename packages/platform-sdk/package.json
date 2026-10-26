@@ -1,5 +1,5 @@
 {
-  "name": "@argocanvas/platform-sdk",
+  "name": "@tiphys/platform-sdk",
   "version": "0.1.0",
   "private": true,
   "type": "module",

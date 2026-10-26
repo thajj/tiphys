@@ -5,7 +5,7 @@ import {
   PauseCircle, Database, Globe, Layers, Split, Repeat,
   ChevronDown, ChevronRight, GitBranch
 } from 'lucide-react';
-import type { FlowNodeData } from '@argocanvas/workflow-domain';
+import type { FlowNodeData } from '@tiphys/workflow-domain';
 
 const StatusIcon = ({ status }: { status: string }) => {
   switch (status) {

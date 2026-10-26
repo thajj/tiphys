@@ -1,11 +1,11 @@
 import React, { useEffect, useState, useRef } from 'react';
-import type { AppNode, FlowNodeData, NameValue, ContainerConfig, Artifact } from '@argocanvas/workflow-domain';
+import type { AppNode, FlowNodeData, NameValue, ContainerConfig, Artifact } from '@tiphys/workflow-domain';
 import { Settings, Trash2, Plus, X, Cpu, HardDrive, Split, Repeat, ArrowRightCircle, Layers, Code, FolderOpen, Package, Cloud, Zap, Calendar, Sparkles, Loader2, ChevronDown, ChevronUp, Maximize2, RefreshCw } from 'lucide-react';
 import { geminiService } from '../services/geminiService';
 import Editor from '@monaco-editor/react';
 import { getWorkflowRuntime } from '../platform/runtime';
 import { draftMirrorStorage } from '../platform/storage';
-import { usePlatformTheme } from '@argocanvas/ui-platform';
+import { usePlatformTheme } from '@tiphys/ui-platform';
 import { ConfirmationDialog } from './ConfirmationDialog';
 import { YamlDocumentEditor } from './YamlDocumentEditor';
 import { yamlModelPaths } from '../yaml/monacoYaml';

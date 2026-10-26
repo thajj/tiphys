@@ -1,10 +1,10 @@
-import type { WorkflowBuilderProps } from "@argocanvas/platform-sdk";
+import type { WorkflowBuilderProps } from "@tiphys/platform-sdk";
 import {
   createConsoleTelemetry,
   createInMemoryEventBus,
   defaultFeatureFlags,
   defaultPermissions,
-} from "@argocanvas/platform-sdk";
+} from "@tiphys/platform-sdk";
 import type {
   AppEdge,
   AppNode,
@@ -15,7 +15,7 @@ import type {
   WorkflowLogStreamChunk,
   WorkflowSession,
   WorkflowTemplateSummary,
-} from "@argocanvas/workflow-domain";
+} from "@tiphys/workflow-domain";
 
 export interface WorkflowDraft {
   sessions: WorkflowSession[];

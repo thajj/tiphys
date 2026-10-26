@@ -1,7 +1,7 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { PlatformThemeProvider } from "@argocanvas/ui-platform";
-import type { FlowNodeData } from "@argocanvas/workflow-domain";
+import { PlatformThemeProvider } from "@tiphys/ui-platform";
+import type { FlowNodeData } from "@tiphys/workflow-domain";
 import { sampleNodes } from "../testing/fixtures";
 import { geminiService } from "../services/geminiService";
 import NodeConfigPanel from "./NodeConfigPanel";

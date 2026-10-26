@@ -6,7 +6,7 @@ import type {
   WorkflowMetadata,
   WorkflowSession,
   WorkflowSpec,
-} from "@argocanvas/workflow-domain";
+} from "@tiphys/workflow-domain";
 
 const relativeIso = (offsetMs: number) => new Date(Date.now() + offsetMs).toISOString();
 
@@ -107,7 +107,7 @@ export const sampleWorkflowRuns: Workflow[] = [
       uid: "wf-1",
       creationTimestamp: relativeIso(-2 * 60 * 60 * 1000),
       labels: {
-        app: "argocanvas",
+        app: "tiphys",
         component: "workflow",
         domain: "data",
       },
@@ -131,7 +131,7 @@ export const sampleWorkflowRuns: Workflow[] = [
       uid: "wf-2",
       creationTimestamp: relativeIso(-30 * 60 * 60 * 1000),
       labels: {
-        app: "argocanvas",
+        app: "tiphys",
         component: "workflow",
         domain: "ml",
       },
@@ -152,7 +152,7 @@ export const sampleWorkflowRuns: Workflow[] = [
       uid: "wf-3",
       creationTimestamp: relativeIso(-45 * 60 * 1000),
       labels: {
-        app: "argocanvas",
+        app: "tiphys",
         component: "workflow",
         domain: "data",
       },

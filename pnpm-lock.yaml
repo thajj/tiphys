@@ -69,13 +69,13 @@ importers:
 
   apps/workflow-builder:
     dependencies:
-      '@argocanvas/platform-sdk':
+      '@tiphys/platform-sdk':
         specifier: workspace:*
         version: link:../../packages/platform-sdk
-      '@argocanvas/ui-platform':
+      '@tiphys/ui-platform':
         specifier: workspace:*
         version: link:../../packages/ui-platform
-      '@argocanvas/workflow-editor':
+      '@tiphys/workflow-editor':
         specifier: workspace:*
         version: link:../../packages/workflow-editor
       react:
@@ -117,13 +117,13 @@ importers:
 
   packages/workflow-editor:
     dependencies:
-      '@argocanvas/platform-sdk':
+      '@tiphys/platform-sdk':
         specifier: workspace:*
         version: link:../platform-sdk
-      '@argocanvas/ui-platform':
+      '@tiphys/ui-platform':
         specifier: workspace:*
         version: link:../ui-platform
-      '@argocanvas/workflow-domain':
+      '@tiphys/workflow-domain':
         specifier: workspace:*
         version: link:../workflow-domain
       '@monaco-editor/react':

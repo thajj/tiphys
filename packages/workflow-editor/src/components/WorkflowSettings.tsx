@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Clock, Save, Settings as SettingsIcon, Shield, Trash2 } from 'lucide-react';
-import { Button, Dialog, cn } from '@argocanvas/ui-platform';
-import type { WorkflowMetadata, WorkflowSpec } from '@argocanvas/workflow-domain';
+import { Button, Dialog, cn } from '@tiphys/ui-platform';
+import type { WorkflowMetadata, WorkflowSpec } from '@tiphys/workflow-domain';
 import { SelectField, TextField } from './formFields';
 
 interface WorkflowSettingsProps {
