@@ -24,7 +24,7 @@ test("imports, persists, submits, inspects logs and deletes a workflow through t
   await expect(page.locator("pre")).not.toContainText("simulation completed");
   await page.getByRole("button", { name: "Workflows", exact: true }).click();
   await page.getByTestId(`workflow-row-${workflow.metadata.name}`).click();
-  await expect(page.locator("pre")).toContainText(`Hello from ArgoCanvas: ${workflow.metadata.name}`);
+  await expect(page.locator("pre")).toContainText(`Hello from Tiphys: ${workflow.metadata.name}`);
   await page.getByRole("button", { name: "Delete", exact: true }).click();
   await page.getByRole("button", { name: "Delete run", exact: true }).click();
   await expect(page.getByTestId(`workflow-row-${workflow.metadata.name}`)).toHaveCount(0);

@@ -42,4 +42,4 @@ spec:
       script:
         image: python:3.13-alpine
         command: [python]
-        source: 'print("Hello from ArgoCanvas")'
+        source: 'print("Hello from Tiphys")'

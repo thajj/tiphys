@@ -18,8 +18,8 @@ import type {
   PlatformSectionRoute,
   WorkflowBuilderFeatureFlags,
   WorkflowBuilderPermissions,
-} from "@argocanvas/platform-sdk";
-import { Button, PlatformStatusBadge, cn } from "@argocanvas/ui-platform";
+} from "@tiphys/platform-sdk";
+import { Button, PlatformStatusBadge, cn } from "@tiphys/ui-platform";
 
 type ProfileHomeSection = Extract<PlatformSectionRoute, "pipelines" | "workflows">;
 

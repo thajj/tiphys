@@ -16,7 +16,7 @@ List all checks run locally and in test environments:
 - [ ] `pnpm audit:check` (Dependency vulnerability policy)
 - [ ] `pnpm e2e` (Playwright browser suite)
 - [ ] `pnpm test:oidc` (OAuth2 Proxy integration test)
-- [ ] Container build verification (`docker build -t argocanvas:local .`)
+- [ ] Container build verification (`docker build -t tiphys:local .`)
 
 If any of the above checks were not run, state the reason:
 

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Editor, { useMonaco } from "@monaco-editor/react";
 import type { editor as MonacoEditor } from "monaco-editor";
 import { Check, Copy, Download, Edit2, Info, Save, WandSparkles, X } from "lucide-react";
-import { PlatformStatusBadge, usePlatformTheme } from "@argocanvas/ui-platform";
+import { PlatformStatusBadge, usePlatformTheme } from "@tiphys/ui-platform";
 import { ensureMonacoYaml } from "../yaml/monacoYaml";
 
 type FeedbackTone = "success" | "warning" | "danger" | "info";

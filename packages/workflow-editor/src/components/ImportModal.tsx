@@ -1,6 +1,6 @@
 import React from 'react';
 import { CopyPlus, FileInput, Replace } from 'lucide-react';
-import { Button, Dialog } from '@argocanvas/ui-platform';
+import { Button, Dialog } from '@tiphys/ui-platform';
 
 interface ImportModalProps {
   isOpen: boolean;

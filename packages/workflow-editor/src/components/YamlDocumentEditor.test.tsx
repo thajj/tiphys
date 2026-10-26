@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { PlatformThemeProvider } from "@argocanvas/ui-platform";
+import { PlatformThemeProvider } from "@tiphys/ui-platform";
 import { YamlDocumentEditor } from "./YamlDocumentEditor";
 
 // Exercise the document/draft lifecycle; real Monaco is covered in Chromium.

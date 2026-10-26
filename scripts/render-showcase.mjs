@@ -73,8 +73,8 @@ const centerY = cameraExpression("centerY", 452);
 await mkdir(destination, { recursive: true });
 const temporary = await mkdtemp(path.join(destination, ".showcase-"));
 try {
-  const video = path.join(temporary, "argocanvas-showcase.mp4");
-  const gif = path.join(temporary, "argocanvas-showcase.gif");
+  const video = path.join(temporary, "tiphys-showcase.mp4");
+  const gif = path.join(temporary, "tiphys-showcase.gif");
   const unoptimizedGif = path.join(temporary, "unoptimized.gif");
   const mask = path.join(temporary, "corners.png");
   // Make one reusable rounded mask; it never follows the pointer or highlights a control.

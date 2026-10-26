@@ -2,14 +2,14 @@
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: argocanvas-client
+  name: tiphys-client
   namespace: workflows
 automountServiceAccountToken: false
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  name: argocanvas-client
+  name: tiphys-client
   namespace: workflows
 rules:
   - apiGroups: [argoproj.io]
@@ -25,13 +25,13 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: argocanvas-client
+  name: tiphys-client
   namespace: workflows
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
-  name: argocanvas-client
+  name: tiphys-client
 subjects:
   - kind: ServiceAccount
-    name: argocanvas-client
+    name: tiphys-client
     namespace: workflows

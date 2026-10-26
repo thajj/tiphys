@@ -59,7 +59,7 @@ export interface PlatformTelemetry {
 }
 
 export interface WorkflowBuilderBranding {
-  /** Accessible name for the host logo. Defaults to ArgoCanvas. */
+  /** Accessible name for the host logo. Defaults to Tiphys. */
   displayName?: string;
   /** Host logo URL. Defaults to the bundled workflow mark. */
   logoUrl?: string;

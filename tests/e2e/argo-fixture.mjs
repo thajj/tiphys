@@ -20,7 +20,7 @@ export function createArgoFixture() {
     if (req.method === "GET") {
       if (action === "log" && records.has(name)) {
         res.writeHead(200, { "Content-Type": "application/json" });
-        res.end(JSON.stringify({ result: { content: `Hello from ArgoCanvas: ${name}`, timestamp: records.get(name).status.finishedAt } }) + "\n"); return;
+        res.end(JSON.stringify({ result: { content: `Hello from Tiphys: ${name}`, timestamp: records.get(name).status.finishedAt } }) + "\n"); return;
       }
       if (name) { reply(res, records.has(name) ? 200 : 404, records.get(name) || { message: "Resource not found" }); return; }
       let items = [...records.values()];

@@ -12,13 +12,13 @@ Cookies are configured to expire after 8 hours and refresh after 10 minutes. The
 
 ## Prepare the environment
 
-1. Tagged releases publish signed, multi-architecture images to GitHub Packages under `ghcr.io/thajj/argocanvas:<version>` with SBOM and build provenance attestations. Verify the published image before deployment:
+1. Tagged releases publish signed, multi-architecture images to GitHub Packages under `ghcr.io/thajj/tiphys:<version>` with SBOM and build provenance attestations. Verify the published image before deployment:
    ```sh
-   gh attestation verify oci://ghcr.io/thajj/argocanvas:0.1.0 -R thajj/ArgoCanvas
+   gh attestation verify oci://ghcr.io/thajj/tiphys:0.1.0 -R thajj/tiphys
    ```
    You can also build and publish your own image from `Dockerfile` under an immutable commit tag or digest. Adjust `deploy/kubernetes/kustomization.yaml` to reference the image you intend to deploy.
 2. Set the public origin, Argo endpoint and namespace, OIDC issuer/client ID, and editor groups in the ConfigMap generator. Set the same hostname in `ingress.yaml`. Replace the ingress class and NetworkPolicy namespace/pod selectors for your actual ingress controller. Use a CNI that enforces NetworkPolicy, and provision the referenced TLS Secret.
-3. Create `argocanvas-secrets` in namespace `argocanvas` with keys `auth-proxy-secret`, `argo-token`, `oidc-client-secret`, and `cookie-secret`. Generate at least 32 random bytes for the proxy secret and encode them as a header-safe string. The cookie secret is a base64-encoded 32-byte random value. Use a secret manager or files with `kubectl create secret generic --from-file`; keep secret values out of Git, shell history, and deployment logs. The proxy reads `auth-proxy-secret` from the mounted file and the gateway reads the same value from its environment. Generate it without a trailing newline.
+3. Create `tiphys-secrets` in namespace `tiphys` with keys `auth-proxy-secret`, `argo-token`, `oidc-client-secret`, and `cookie-secret`. Generate at least 32 random bytes for the proxy secret and encode them as a header-safe string. The cookie secret is a base64-encoded 32-byte random value. Use a secret manager or files with `kubectl create secret generic --from-file`; keep secret values out of Git, shell history, and deployment logs. The proxy reads `auth-proxy-secret` from the mounted file and the gateway reads the same value from its environment. Generate it without a trailing newline.
 4. Enable Argo Server's client authentication. Use the namespaced service account and Role in `deploy/argo-rbac.example.yaml`, adjusted to the actual execution namespace, to obtain the gateway credential. Do not grant cluster-admin or reuse an administrator token. Rotate the credential before expiration and restart the Deployment after environment-backed secret changes. Argo's own authorization remains authoritative. See [Argo access-token guidance](https://argo-workflows.readthedocs.io/en/latest/access-token/).
 5. Ensure workflow runner service accounts have only the permissions required by submitted jobs. Set namespace Pod Security restrictions, resource quotas, image/admission policies, and Argo workflow defaults appropriate to your workloads. Editor access allows submitting executable workloads, including resource templates; the gateway's namespace check does not replace Kubernetes admission or runner RBAC. Do not mount production administrative credentials into workflow pods.
 6. Provision a persistent volume with a StorageClass suitable for the cluster. The pod uses `fsGroup: 1000`; the volume must support this or be provisioned with UID/GID 1000 ownership. The file store is a single-writer design: keep one replica and the `Recreate` update strategy. This entails brief downtime during updates. Use a shared database before introducing horizontal scaling.
@@ -30,7 +30,7 @@ Render the exact manifests before applying them:
 kubectl kustomize deploy/kubernetes > rendered.yaml
 # Apply to the chosen context after replacing the example values and provisioning secrets.
 kubectl --context YOUR_CONTEXT apply -f rendered.yaml
-kubectl --context YOUR_CONTEXT -n argocanvas rollout status deployment/argocanvas
+kubectl --context YOUR_CONTEXT -n tiphys rollout status deployment/tiphys
 ```
 
 No Secret resources with usable credentials are checked in. The example manifests deliberately contain placeholders and cannot log in or access an Argo cluster until configured.

@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Button, Dialog } from "@argocanvas/ui-platform";
+import { Button, Dialog } from "@tiphys/ui-platform";
 
 type ConfirmationDialogProps = {
   open: boolean;

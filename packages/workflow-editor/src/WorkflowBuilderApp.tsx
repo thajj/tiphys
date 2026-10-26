@@ -37,7 +37,7 @@ import type {
   PlatformNavigationSource,
   PlatformSectionRoute,
   WorkflowBuilderProps,
-} from '@argocanvas/platform-sdk';
+} from '@tiphys/platform-sdk';
 import {
   Button,
   cn,
@@ -53,8 +53,8 @@ import {
   SectionNotice,
   Tooltip,
   usePlatformTheme,
-} from '@argocanvas/ui-platform';
-import { AppNode, WorkflowMetadata, WorkflowSpec, WorkflowSession, AppEdge, generateWorkflowObject, generateWorkflowTemplateObject, getLayoutedElements, parseYamlToWorkflow, validateGraphConnectivity, SimulationEngine } from '@argocanvas/workflow-domain';
+} from '@tiphys/ui-platform';
+import { AppNode, WorkflowMetadata, WorkflowSpec, WorkflowSession, AppEdge, generateWorkflowObject, generateWorkflowTemplateObject, getLayoutedElements, parseYamlToWorkflow, validateGraphConnectivity, SimulationEngine } from '@tiphys/workflow-domain';
 import { argoService } from './services/argoService';
 import { geminiService } from './services/geminiService';
 import { platformResourceService } from './services/platformResourceService';
@@ -198,13 +198,13 @@ const Flow = ({ shell, renderMode }: { shell: WorkflowBuilderProps; renderMode: 
     shell.featureFlags.workflowTemplateManagement !== false &&
     shell.permissions.canManageWorkflowTemplates !== false;
   const isDarkTheme = theme === 'dark';
-  const brandName = shell.branding?.displayName ?? 'ArgoCanvas';
+  const brandName = shell.branding?.displayName ?? 'Tiphys';
   const customBrandMarkSrc = isDarkTheme
     ? shell.branding?.darkLogoUrl ?? shell.branding?.logoUrl
     : shell.branding?.logoUrl;
   const brandMarkSrc = customBrandMarkSrc ?? getBrandAssetUrl(
     shell.basePath,
-    isDarkTheme ? 'argocanvas-mark-dark.svg' : 'argocanvas-mark-light.svg',
+    isDarkTheme ? 'tiphys-mark-dark.svg' : 'tiphys-mark-light.svg',
   );
   const nextThemeIcon = isDarkTheme ? <SunMedium size={16} /> : <MoonStar size={16} />;
   const previewThemeLabel = isDarkTheme ? 'Light mode' : 'Dark mode';
@@ -1268,7 +1268,7 @@ const Flow = ({ shell, renderMode }: { shell: WorkflowBuilderProps; renderMode: 
 
   const handleSendTestBrowserNotification = () => {
     const sent = sendBrowserNotification(notificationPreferences, 'workflowSucceeded', {
-      title: 'ArgoCanvas Test Notification',
+      title: 'Tiphys Test Notification',
       body: 'Browser notifications are configured for this profile.',
       tag: 'workflow-builder:test-notification',
     });

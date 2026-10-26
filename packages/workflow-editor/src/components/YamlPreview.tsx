@@ -1,6 +1,6 @@
 import { useMemo } from "react";
-import type { AppEdge, AppNode, WorkflowMetadata, WorkflowSpec } from "@argocanvas/workflow-domain";
-import { generateYaml, parseYamlToWorkflow } from "@argocanvas/workflow-domain";
+import type { AppEdge, AppNode, WorkflowMetadata, WorkflowSpec } from "@tiphys/workflow-domain";
+import { generateYaml, parseYamlToWorkflow } from "@tiphys/workflow-domain";
 import { YamlDocumentEditor } from "./YamlDocumentEditor";
 import { yamlModelPaths } from "../yaml/monacoYaml";
 

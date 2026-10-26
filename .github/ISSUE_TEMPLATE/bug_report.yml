@@ -1,5 +1,5 @@
 name: Bug report
-description: Report an issue or unexpected behavior in ArgoCanvas
+description: Report an issue or unexpected behavior in Tiphys
 title: "[Bug]: "
 labels: ["bug"]
 body:

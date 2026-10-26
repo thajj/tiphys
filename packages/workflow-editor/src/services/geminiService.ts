@@ -1,4 +1,4 @@
-import type { AppEdge, AppNode, FlowNodeData } from "@argocanvas/workflow-domain";
+import type { AppEdge, AppNode, FlowNodeData } from "@tiphys/workflow-domain";
 import { getWorkflowRuntime } from "../platform/runtime";
 
 export const geminiService = {

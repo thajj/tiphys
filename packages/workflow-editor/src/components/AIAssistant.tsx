@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { geminiService } from '../services/geminiService';
 import { Loader2, PlayCircle, Sparkles } from 'lucide-react';
-import { Button } from '@argocanvas/ui-platform';
+import { Button } from '@tiphys/ui-platform';
 import { getWorkflowRuntime } from '../platform/runtime';
 import { TextAreaField } from './formFields';
 

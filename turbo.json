@@ -7,7 +7,7 @@
       ],
       "outputs": []
     },
-    "@argocanvas/workflow-builder#build": {
+    "@tiphys/workflow-builder#build": {
       "dependsOn": ["^build"],
       "outputs": ["dist/**", "dist-server/**"],
       "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/tailwind.config.cjs", "$TURBO_ROOT$/postcss.config.cjs", "$TURBO_ROOT$/tsconfig.base.json"]

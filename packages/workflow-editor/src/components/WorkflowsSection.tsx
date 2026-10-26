@@ -5,7 +5,7 @@ import type {
   WorkflowListQuery,
   WorkflowPhase,
   WorkflowTemplateSummary,
-} from "@argocanvas/workflow-domain";
+} from "@tiphys/workflow-domain";
 import {
   Button,
   PlatformEmptyState,
@@ -18,7 +18,7 @@ import {
   TableHeader,
   TableRow,
   Tooltip,
-} from "@argocanvas/ui-platform";
+} from "@tiphys/ui-platform";
 import {
   Activity,
   ArrowUpRight,
@@ -149,7 +149,7 @@ const workflowMatchesSearch = (workflow: Workflow, search: string) => {
 };
 
 const getWorkflowOutputUri = (workflow: Workflow) => {
-  const annotated = workflow.metadata.annotations?.["argocanvas/output-uri"];
+  const annotated = workflow.metadata.annotations?.["tiphys/output-uri"];
   if (annotated) {
     return annotated;
   }

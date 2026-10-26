@@ -48,7 +48,7 @@ async function installPresentation(page: Page) {
       <div id="showcase-footer">
         <div id="showcase-number">01</div>
         <div id="showcase-copy"><div id="showcase-title"></div><div id="showcase-description"></div></div>
-        <div id="showcase-brand"><strong>ArgoCanvas</strong><div id="showcase-badge">Sample services · Demo data</div><div id="showcase-progress">${Array.from({ length: 5 }, () => "<span></span>").join("")}</div></div>
+        <div id="showcase-brand"><strong>Tiphys</strong><div id="showcase-badge">Sample services · Demo data</div><div id="showcase-progress">${Array.from({ length: 5 }, () => "<span></span>").join("")}</div></div>
       </div>`;
     document.body.appendChild(overlay);
     overlay.showPopover();
@@ -262,7 +262,7 @@ test("records the feature showcase through the production gateway", async ({ pag
     await pointAt(page, page.getByRole("button", { name: "View runs", exact: true }), true);
     const workflowRow = page.getByTestId(`workflow-row-${workflow.metadata.name}`);
     await pointAt(page, workflowRow, true);
-    await expect(page.locator("pre")).toContainText(`Hello from ArgoCanvas: ${workflow.metadata.name}`);
+    await expect(page.locator("pre")).toContainText(`Hello from Tiphys: ${workflow.metadata.name}`);
     const logBox = await page.locator("pre").boundingBox();
     if (!logBox) throw new Error("The workflow logs have no visible bounds");
     frame(2, logBox.x + logBox.width / 2, 275);

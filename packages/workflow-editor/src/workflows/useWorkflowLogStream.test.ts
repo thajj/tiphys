@@ -2,7 +2,7 @@ import { act, renderHook, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { getWorkflowRuntime, initializeWorkflowRuntime } from "../platform/runtime";
 import { useWorkflowLogStream } from "./useWorkflowLogStream";
-import type { WorkflowLogStreamChunk } from "@argocanvas/workflow-domain";
+import type { WorkflowLogStreamChunk } from "@tiphys/workflow-domain";
 
 const originalRuntime = getWorkflowRuntime();
 

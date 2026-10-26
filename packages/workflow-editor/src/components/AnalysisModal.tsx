@@ -1,6 +1,6 @@
 import React from 'react';
 import { Loader2, Sparkles } from 'lucide-react';
-import { Button, Dialog } from '@argocanvas/ui-platform';
+import { Button, Dialog } from '@tiphys/ui-platform';
 
 interface AnalysisModalProps {
   isOpen: boolean;

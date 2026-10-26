@@ -158,7 +158,7 @@ const createFallbackWorkflow = (namespace: string, workflow: Record<string, unkn
   workflowFallbackLogs.set(
     resourceKey(namespace, name),
     [
-      `[${now}] Workflow submitted through ArgoCanvas dev gateway.`,
+      `[${now}] Workflow submitted through Tiphys dev gateway.`,
       `Workflow: ${name}`,
       `Namespace: ${namespace}`,
     ].join("\n"),

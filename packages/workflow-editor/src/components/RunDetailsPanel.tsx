@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { Clock3, Terminal } from "lucide-react";
-import { PlatformEmptyState, PlatformStatusBadge } from "@argocanvas/ui-platform";
+import { PlatformEmptyState, PlatformStatusBadge } from "@tiphys/ui-platform";
 import { useWorkflowLogStream } from "../workflows/useWorkflowLogStream";
 
 type RunDetailsPanelProps = {

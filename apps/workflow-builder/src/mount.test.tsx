@@ -1,9 +1,9 @@
 import { act, waitFor } from "@testing-library/react";
 import { vi, describe, expect, it, beforeEach } from "vitest";
-import { createConsoleTelemetry, createInMemoryEventBus, defaultFeatureFlags, defaultPermissions } from "@argocanvas/platform-sdk";
+import { createConsoleTelemetry, createInMemoryEventBus, defaultFeatureFlags, defaultPermissions } from "@tiphys/platform-sdk";
 import { mountWorkflowBuilder, unmountWorkflowBuilder } from "./public-api";
 
-vi.mock("@argocanvas/workflow-editor", () => ({
+vi.mock("@tiphys/workflow-editor", () => ({
   WorkflowBuilderApp: ({ shell }: { shell: { projectId: string } }) => <div>Mounted {shell.projectId}</div>,
   WorkflowBuilderPreviewApp: () => <div>Preview shell</div>,
   createFetchAiClient: () => ({}),

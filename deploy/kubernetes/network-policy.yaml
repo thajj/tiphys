@@ -1,11 +1,11 @@
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: argocanvas-ingress
+  name: tiphys-ingress
 spec:
   podSelector:
     matchLabels:
-      app: argocanvas
+      app: tiphys
   policyTypes: [Ingress]
   ingress:
     - from:

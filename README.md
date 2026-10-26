@@ -1,19 +1,19 @@
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="apps/workflow-builder/public/brand/argocanvas-mark-dark.svg" />
-  <img src="apps/workflow-builder/public/brand/argocanvas-mark-light.svg" alt="ArgoCanvas: connected workflow steps branch, converge, and run" width="80" height="80" />
+  <source media="(prefers-color-scheme: dark)" srcset="apps/workflow-builder/public/brand/tiphys-mark-dark.svg" />
+  <img src="apps/workflow-builder/public/brand/tiphys-mark-light.svg" alt="Tiphys: connected workflow steps branch, converge, and run" width="80" height="80" />
 </picture>
 
-# ArgoCanvas
+# Tiphys
 
 **Design visually. Run on Argo.**
 
-ArgoCanvas is an independent visual editor for Argo Workflows. Connect steps on a canvas, inspect the YAML, reuse templates, and follow execution through status and logs. It connects to your existing Argo installation, with optional AI assistance for drafting and reviewing workflows.
+Tiphys is an independent visual editor for Argo Workflows. Connect steps on a canvas, inspect the YAML, reuse templates, and follow execution through status and logs. It connects to your existing Argo installation, with optional AI assistance for drafting and reviewing workflows.
 
-[Get started](#quickstart) · [Deploy on Kubernetes](docs/production.md) · [Compatibility](docs/production.md#recorded-live-compatibility-check) · [Contribute](CONTRIBUTING.md) · [CI](https://github.com/thajj/ArgoCanvas/actions/workflows/ci.yaml) · [Report a bug](https://github.com/thajj/ArgoCanvas/issues)
+[Get started](#quickstart) · [Deploy on Kubernetes](docs/production.md) · [Compatibility](docs/production.md#recorded-live-compatibility-check) · [Contribute](CONTRIBUTING.md) · [CI](https://github.com/thajj/tiphys/actions/workflows/ci.yaml) · [Report a bug](https://github.com/thajj/tiphys/issues)
 
-[![Captioned ArgoCanvas walkthrough: build a pipeline, review YAML, and draft with AI](docs/media/argocanvas-showcase.gif)](docs/media/argocanvas-showcase.mp4)
+[![Captioned Tiphys walkthrough: build a pipeline, review YAML, and draft with AI](docs/media/tiphys-showcase.gif)](docs/media/tiphys-showcase.mp4)
 
-[Watch the MP4 walkthrough](docs/media/argocanvas-showcase.mp4) · [View static screenshots — reduced motion](#workspace-tour)
+[Watch the MP4 walkthrough](docs/media/tiphys-showcase.mp4) · [View static screenshots — reduced motion](#workspace-tour)
 
 *The walkthrough and screenshots show the compiled production app with editor permissions and AI integration enabled. Captions and gentle zooms guide the tour. Argo and Gemini responses come from deterministic sample services, using sample data and dummy credentials.*
 
@@ -30,8 +30,8 @@ ArgoCanvas is an independent visual editor for Argo Workflows. Connect steps on 
 Use **Node.js 24** and **pnpm 10.29.3**, the versions used by CI. `.nvmrc` selects Node 24, and `package.json` pins pnpm.
 
 ```sh
-git clone https://github.com/thajj/ArgoCanvas.git
-cd ArgoCanvas
+git clone https://github.com/thajj/tiphys.git
+cd tiphys
 pnpm install --frozen-lockfile
 cp .env.example .env.local
 pnpm dev
@@ -51,19 +51,19 @@ Built-in workflow patterns are starting points: supply images, credentials, stor
 
 Connect steps on the canvas and configure each node in the inspector. The sample pipeline collects records, validates and transforms them in parallel, then publishes a summary.
 
-![ArgoCanvas visual workflow builder showing the complete four-step sample pipeline and node settings](docs/images/workflow-builder.png)
+![Tiphys visual workflow builder showing the complete four-step sample pipeline and node settings](docs/images/workflow-builder.png)
 
 ### Review the manifest
 
 Inspect and edit the generated YAML alongside the graph. Monaco, its language workers, and the Argo schema are served by the application, with validation feedback before you apply edits.
 
-![ArgoCanvas YAML editor showing the sample workflow manifest](docs/images/yaml-editor.png)
+![Tiphys YAML editor showing the sample workflow manifest](docs/images/yaml-editor.png)
 
 ### Draft with AI
 
 Describe a pipeline in **AI Ask** to generate a starting manifest through the AI gateway. Use **Analyze with AI** for feedback on the current workflow, then review and adjust the draft before submitting it. Administrators enable this integration with a Gemini key and model; access follows the user's editor permissions.
 
-![ArgoCanvas AI Assistant with workflow generation enabled](docs/images/ai-assistant.png)
+![Tiphys AI Assistant with workflow generation enabled](docs/images/ai-assistant.png)
 
 *AI assistance enabled in the sample environment, backed by a deterministic Gemini fixture.*
 
@@ -74,7 +74,7 @@ The [production deployment guide](docs/production.md) covers image builds, Kuber
 The production image serves the compiled application through a Node.js gateway behind an OAuth2 Proxy sidecar. The proxy authenticates with your OIDC provider; the gateway enforces viewer/editor groups, namespace scope, and same-origin writes. Argo credentials stay on the server. Production workflow requests use the real Argo API and report upstream failures.
 
 ```sh
-docker build -t argocanvas:local .
+docker build -t tiphys:local .
 kubectl kustomize deploy/kubernetes
 ```
 
@@ -131,7 +131,7 @@ The [CI workflow](.github/workflows/ci.yaml) checks the workspace, browser behav
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for the development workflow, checks, and pull-request guidance. Contributors are expected to adhere to the [Code of Conduct](CODE_OF_CONDUCT.md). Bug reports should include reproduction steps, the commit being tested, browser/runtime versions, and whether the problem occurs in development or production mode. Remove tokens, personal information, and sensitive workflow content before sharing logs or screenshots.
 
-Use [GitHub Issues](https://github.com/thajj/ArgoCanvas/issues) for bugs and feature proposals. See [SECURITY.md](SECURITY.md) for security reporting and the project's current support status.
+Use [GitHub Issues](https://github.com/thajj/tiphys/issues) for bugs and feature proposals. See [SECURITY.md](SECURITY.md) for security reporting and the project's current support status.
 
 ## License
 
@@ -139,4 +139,4 @@ Licensed under the [Apache License 2.0](LICENSE). Third-party dependencies retai
 
 ## Trademarks
 
-ArgoCanvas is an independent project. It is not affiliated with, endorsed by, or sponsored by the Argo Project, the Cloud Native Computing Foundation, or The Linux Foundation. Argo is a trademark of The Linux Foundation. Gemini is a trademark of Google LLC.
+Tiphys is an independent project. It is not affiliated with, endorsed by, or sponsored by the Argo Project, the Cloud Native Computing Foundation, or The Linux Foundation. Argo is a trademark of The Linux Foundation. Gemini is a trademark of Google LLC.

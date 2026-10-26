@@ -1,5 +1,5 @@
 {
-  "name": "argocanvas-platform",
+  "name": "tiphys-platform",
   "private": true,
   "version": "0.1.0",
   "license": "Apache-2.0",
@@ -10,7 +10,7 @@
     "pnpm": ">=10 <11"
   },
   "scripts": {
-    "dev": "turbo run dev --filter=@argocanvas/workflow-builder",
+    "dev": "turbo run dev --filter=@tiphys/workflow-builder",
     "build": "turbo run build",
     "start": "node apps/workflow-builder/dist-server/main.js",
     "check": "pnpm lint && pnpm test && pnpm build && pnpm e2e",

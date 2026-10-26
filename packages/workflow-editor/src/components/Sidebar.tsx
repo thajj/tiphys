@@ -5,7 +5,7 @@ import {
   ChevronLeft, RefreshCw, AlertCircle, Loader2,
   FileCode2, Table, TrendingUp,
 } from 'lucide-react';
-import { cn } from '@argocanvas/ui-platform';
+import { cn } from '@tiphys/ui-platform';
 import { argoService } from '../services/argoService';
 
 // ─── Types ────────────────────────────────────────────────────────────────────

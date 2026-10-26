@@ -4,9 +4,9 @@ import {
   defaultFeatureFlags,
   defaultPermissions,
   type WorkflowBuilderProps,
-} from "@argocanvas/platform-sdk";
-import { PlatformThemeProvider } from "@argocanvas/ui-platform";
-import { SimulationEngine, type FlowNodeData, type Workflow } from "@argocanvas/workflow-domain";
+} from "@tiphys/platform-sdk";
+import { PlatformThemeProvider } from "@tiphys/ui-platform";
+import { SimulationEngine, type FlowNodeData, type Workflow } from "@tiphys/workflow-domain";
 import {
   sampleSessions,
   sampleWorkflowRuns,

@@ -41,7 +41,7 @@ test("opens workflow runs and templates using the keyboard", async ({ page }, te
   await tabTo(page, run);
   await page.keyboard.press("Enter");
   await expect(run).toHaveAttribute("aria-pressed", "true");
-  await expect(page.locator("pre")).toContainText(`Hello from ArgoCanvas: ${name}`);
+  await expect(page.locator("pre")).toContainText(`Hello from Tiphys: ${name}`);
 
   await page.getByRole("button", { name: "Templates", exact: true }).click();
   const template = page.getByRole("button", { name: `Select template ${name}`, exact: true });
