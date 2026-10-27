@@ -90,19 +90,12 @@ path.react-flow__edge-path.animated {
 }
 
 .react-flow__handle {
-  transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+  /* React Flow measures these bounds to anchor edges. Animating or scaling the
+     handle transform leaves cached endpoints between the old and new positions. */
+  transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
-/* Maintain handle centering precisely on hover without jumping */
-.react-flow__handle-left:hover,
-.react-flow__handle-right:hover {
-  transform: translate(0px, -50%) scale(1.25) !important;
-  box-shadow: 0 0 0 3px rgb(var(--wb-color-accent-primary) / 0.35);
-}
-
-.react-flow__handle-top:hover,
-.react-flow__handle-bottom:hover {
-  transform: translate(-50%, 0px) scale(1.25) !important;
+.react-flow__handle:hover {
   box-shadow: 0 0 0 3px rgb(var(--wb-color-accent-primary) / 0.35);
 }
 

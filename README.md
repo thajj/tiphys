@@ -7,27 +7,54 @@
 
 **Design visually. Run on Argo.**
 
-Tiphys is an independent visual editor for Argo Workflows. Connect steps on a canvas, inspect the YAML, reuse templates, and follow execution through status and logs. It connects to your existing Argo installation, with optional AI assistance for drafting and reviewing workflows.
+Tiphys is an open-source visual editor for Argo Workflows. Drag components from the left-hand library, configure them, and draw connections without writing YAML. Or copy an existing Argo manifest, paste it onto the canvas, and start with its graph.
+
+Inspect the generated YAML and follow runs through status and logs. Your existing Argo installation executes the workflows.
 
 [Get started](#quickstart) · [Deploy on Kubernetes](docs/production.md) · [Compatibility](docs/production.md#recorded-live-compatibility-check) · [Contribute](CONTRIBUTING.md) · [CI](https://github.com/thajj/tiphys/actions/workflows/ci.yaml) · [Report a bug](https://github.com/thajj/tiphys/issues)
 
-[![Captioned Tiphys walkthrough: build a pipeline, review YAML, and draft with AI](docs/media/tiphys-showcase.gif)](docs/media/tiphys-showcase.mp4)
+[![Tiphys walkthrough: drag components from Library, configure and connect them, then paste an official Argo YAML example](docs/media/tiphys-showcase.gif)](docs/media/tiphys-showcase.mp4)
 
-[Watch the MP4 walkthrough](docs/media/tiphys-showcase.mp4) · [View static screenshots — reduced motion](#workspace-tour)
+[Watch the MP4 walkthrough](docs/media/tiphys-showcase.mp4) · [View static screenshots (no animation)](#workspace-tour)
 
-*The walkthrough and screenshots show the compiled production app with editor permissions and AI integration enabled. Captions and gentle zooms guide the tour. Argo and Gemini responses come from deterministic sample services, using sample data and dummy credentials.*
+*The step-by-step GIF uses captures of the real editor: three components added from Library, their settings and connections, then an official Argo YAML import. The visuals use the compiled app with editor permissions, sample services, and dummy credentials. No workloads were executed for this walkthrough. The AI screenshot uses a sample Gemini response.*
 
-## What you can do
+## Workspace tour
 
-- **Design workflows visually.** Connect steps, configure inputs and outputs, set retries and conditions, and organize work across draft tabs.
-- **Work with YAML.** Import workflows, inspect generated manifests, and edit with locally bundled Monaco and Argo schema hints.
-- **Operate Argo workflows.** Submit runs, inspect status and logs, suspend or resume workflows, and publish, update, and reuse WorkflowTemplates from the Templates library.
-- **Keep your work.** Production drafts persist on disk per authenticated user, with browser recovery copies and visible save failures.
-- **Use optional AI assistance.** Generate a workflow draft, analyze dependencies and configuration, or request a node edit through a server-side Gemini integration. Review generated changes before running them.
+### Build a workflow without writing YAML
+
+1. Open **Library** on the left. Drag a **Container**, an **HTTP Request**, and a **Suspend** component onto the empty canvas.
+2. Select each node to configure it in the inspector. In this example, `prepare` uses `busybox:1.37` and the default `echo hello` command; `check-api` sends a GET request to `https://example.com`; `approve` has an empty duration so it waits for approval.
+3. Draw connections between the nodes' output and input dots: `prepare` → `check-api` → `approve`. Use the layout controls to arrange the graph, then open **YAML** to inspect the generated manifest.
+
+![Tiphys with the component Library open on the left, three connected nodes on the canvas, and the prepare container settings in the right-hand inspector](docs/images/workflow-builder.png)
+
+*The component library, connected graph, and configuration form stay in the same workspace. Node settings also include inputs, outputs, retries, and conditions.*
+
+### Start from an official Argo YAML example
+
+1. Open Argo's official [`dag-diamond.yaml`](https://github.com/argoproj/argo-workflows/blob/main/examples/dag-diamond.yaml) and click **Copy raw file**.
+2. Click an empty area of the Tiphys canvas and paste with **Cmd+V** or **Ctrl+V**.
+3. Choose **Open in New Tab** in the import dialog. Tiphys displays the four-step diamond: A branches into B and C, then both join at D. Your other draft stays open.
+4. Select a node to change its settings, or open **YAML** to inspect and edit the manifest. Set the workflow namespace to match your Argo connection before submitting it.
+
+![Official Argo diamond example imported into Tiphys, with A branching to B and C before D and the generated YAML open beside the graph](docs/images/yaml-editor.png)
+
+*Copy a working example, paste it, and continue in the visual editor.*
+
+Tiphys serves Monaco, its language workers, and the Argo schema locally, with validation feedback before you apply YAML edits. Visual editing supports a subset of Argo. Importing advanced YAML into the graph and regenerating it can drop unsupported fields or simplify constructs. Review the result before submission. Argo performs the final validation.
+
+### Draft with AI
+
+Use **AI Ask** to draft a workflow, **Analyze with AI** for feedback on dependencies and configuration, or **Edit with AI** to change a node. Administrators enable the server-side Gemini integration; access follows editor permissions. Review generated changes before running them.
+
+![Tiphys AI Ask panel beside the workflow graph, with a prompt to collect records, validate and transform them in parallel, and publish a summary](docs/images/ai-assistant.png)
+
+*A prompt for a separate four-step pipeline, ready to generate a draft.*
 
 ## Quickstart
 
-Use **Node.js 24** and **pnpm 10.29.3**, the versions used by CI. `.nvmrc` selects Node 24, and `package.json` pins pnpm.
+Use **Node.js 24** and **pnpm 10.29.3**, the versions used by CI. `.nvmrc` selects Node 24; `package.json` pins pnpm.
 
 ```sh
 git clone https://github.com/thajj/tiphys.git
@@ -37,56 +64,43 @@ cp .env.example .env.local
 pnpm dev
 ```
 
-Open [http://127.0.0.1:3000](http://127.0.0.1:3000). You can explore the editor without a cluster. To connect development workflow requests to Argo, set `ARGO_ENDPOINT`, `ARGO_NAMESPACE`, and `ARGO_TOKEN` in `.env.local`, then restart the server. Optional AI requires both `GEMINI_API_KEY` and `GEMINI_MODEL`; choose a [currently available text model](https://ai.google.dev/gemini-api/docs/deprecations/) for your Google project. The same model handles generation, editing, and analysis. Bare IDs and `models/<ID>` names are accepted; see [.env.example](.env.example). Keep credentials in server-side variables, never variables prefixed with `VITE_`. Optional development links to the native Argo UI use `VITE_ARGO_UI_URL`.
+Open [http://127.0.0.1:3000](http://127.0.0.1:3000). You can explore the editor without a cluster. To connect services, edit `.env.local` using [.env.example](.env.example) as a reference, then restart:
 
-**Development mode includes simulations.** Its gateway stores drafts and templates in memory and can return simulated successful workflow runs when Argo is unreachable. A successful development run is not evidence of cluster execution. Use the production gateway and deployment verification procedure for integration testing.
+- **Argo:** set `ARGO_ENDPOINT`, `ARGO_NAMESPACE`, and `ARGO_TOKEN`.
+- **Optional AI:** set `GEMINI_API_KEY` and `GEMINI_MODEL`. Choose an [available text model](https://ai.google.dev/gemini-api/docs/deprecations/) for your Google project. The same model handles generation, editing, and analysis; both bare IDs and `models/<ID>` names work.
+- **Optional Argo UI links:** set `VITE_ARGO_UI_URL` to the public URL of your Argo UI.
 
-**Dry run** previews graph execution without running containers. **Execute** submits the generated workflow; **Submitted** means Argo accepted the request, not that execution finished. Open **View runs** or **Workflows** to follow the actual phase and logs.
+Keep credentials in server-side variables. Values prefixed with `VITE_` go into the browser bundle and must not contain secrets.
 
-Built-in workflow patterns are starting points: supply images, credentials, storage paths, and application-specific commands before submitting them. The [hello workflow](examples/hello-workflow.yaml) is a small example to inspect or import. It uses the `workflows` namespace; change its `metadata.namespace` to your configured `ARGO_NAMESPACE` before running it (`.env.example` defaults to `default`).
+**Development mode includes simulations.** Drafts and templates live in memory, and the gateway can return simulated successful runs when Argo is unreachable. A successful request here does not confirm cluster execution. Use the production gateway and [deployment checks](docs/production.md#deployment-checks) to test your cluster integration.
 
-## Workspace tour
+Start with the [hello workflow](examples/hello-workflow.yaml). It uses the `workflows` namespace; set its `metadata.namespace` to your `ARGO_NAMESPACE` before submitting it (`.env.example` defaults to `default`). Built-in patterns also need your own images, credentials, storage paths, and application commands.
 
-### Build the pipeline
+## Runs, templates, and drafts
 
-Connect steps on the canvas and configure each node in the inspector. The sample pipeline collects records, validates and transforms them in parallel, then publishes a summary.
+Click **Execute** to submit a workflow. **Submitted** means Argo accepted the request. Open **View runs** or **Workflows** to check its actual phase and logs, or to suspend and resume it. **Dry run** simulates the graph without running containers.
 
-![Tiphys visual workflow builder showing the complete four-step sample pipeline and node settings](docs/images/workflow-builder.png)
+Use **Publish** to create a WorkflowTemplate and **Update** to save changes. Find and reuse stored templates in the **Templates** library. Argo stores these resources in the cluster, and updates include the current resource revision so it can reject conflicting changes.
 
-### Review the manifest
-
-Inspect and edit the generated YAML alongside the graph. Monaco, its language workers, and the Argo schema are served by the application, with validation feedback before you apply edits.
-
-![Tiphys YAML editor showing the sample workflow manifest](docs/images/yaml-editor.png)
-
-### Draft with AI
-
-Describe a pipeline in **AI Ask** to generate a starting manifest through the AI gateway. Use **Analyze with AI** for feedback on the current workflow, then review and adjust the draft before submitting it. Administrators enable this integration with a Gemini key and model; access follows the user's editor permissions.
-
-![Tiphys AI Assistant with workflow generation enabled](docs/images/ai-assistant.png)
-
-*AI assistance enabled in the sample environment, backed by a deterministic Gemini fixture.*
+In production, Tiphys saves drafts on disk for each signed-in user and keeps recovery copies in the browser. The editor reports failed saves.
 
 ## Deploy on Kubernetes
 
-The [production deployment guide](docs/production.md) covers image builds, Kubernetes manifests, OIDC configuration, secrets, Argo RBAC, persistent storage, verification, backups, and rollback.
+The [deployment guide](docs/production.md) covers image builds, Kubernetes manifests, OIDC, secrets, Argo RBAC, storage, verification, backups, and rollback.
 
-The production image serves the compiled application through a Node.js gateway behind an OAuth2 Proxy sidecar. The proxy authenticates with your OIDC provider; the gateway enforces viewer/editor groups, namespace scope, and same-origin writes. Argo credentials stay on the server. Production workflow requests use the real Argo API and report upstream failures.
+The production image serves the compiled app through a Node.js gateway behind an OAuth2 Proxy sidecar. The proxy authenticates with your OIDC provider. The gateway enforces viewer/editor groups, namespace scope, and same-origin writes, keeps Argo credentials on the server, and reports failures from the real Argo API.
 
 ```sh
 docker build -t tiphys:local .
 kubectl kustomize deploy/kubernetes
 ```
 
-The second command renders the example manifests for inspection. Replace the image, hostname, OIDC settings, ingress selectors, and storage configuration, and provision Secrets and TLS before applying them. `pnpm dev` and `vite preview` are development tools; deploy the published release image or build from the root `Dockerfile`.
+`kubectl kustomize` renders the example manifests for inspection. Before applying them, replace the image, hostname, OIDC settings, ingress selectors, and storage configuration, and provision Secrets and TLS. Deploy the published release image or build from the root `Dockerfile`; `pnpm dev` and `vite preview` are development tools.
 
 ### Current boundaries
 
-- **Trusted team, one namespace.** Workflows, templates, and logs are shared within the deployment's namespace. Per-user drafts are isolated. Editor access permits executable Kubernetes workloads; runner RBAC and cluster admission remain essential.
-- **One gateway replica.** Drafts use a persistent filesystem with one writer and last-save-wins semantics. The supplied deployment uses `Recreate`, so updates briefly interrupt service. Horizontal scaling requires a shared persistence design.
-- **Visual editing supports a subset of Argo.** Importing a manifest into the graph and regenerating YAML can omit unsupported fields or simplify constructs. Review the resulting YAML before submission, especially for existing or advanced workflows. Argo performs the authoritative validation.
-
-The [operations guide](docs/production.md#verification-and-operation) distinguishes automated fixture coverage from checks that must pass against your actual cluster and identity provider.
+- **Trusted team, one namespace.** Workflows, templates, and logs are shared within the namespace; drafts are isolated per user. Editors can submit executable Kubernetes workloads, so runner RBAC and cluster admission policies remain essential.
+- **One gateway replica.** Draft storage uses one filesystem writer with last-save-wins semantics. The deployment uses `Recreate`, which causes brief downtime during updates. Horizontal scaling requires shared persistence.
 
 ## Architecture
 
@@ -98,12 +112,12 @@ Browser → TLS ingress → OIDC login proxy → Node.js gateway → Argo Server
 
 The TypeScript workspace uses React, React Flow, Monaco, Vite, pnpm, and Turborepo:
 
-- [`apps/workflow-builder`](apps/workflow-builder) — standalone host, production gateway, development gateway, and `mountWorkflowBuilder` / `unmountWorkflowBuilder` entry points.
-- [`packages/workflow-editor`](packages/workflow-editor) — graph and YAML editors, workflow operations, and runtime clients.
-- [`packages/workflow-domain`](packages/workflow-domain) — workflow types, parsing, generation, validation, layout, and simulation.
-- [`packages/platform-sdk`](packages/platform-sdk) — host integration contracts, feature flags, permissions, events, and telemetry.
-- [`packages/ui-platform`](packages/ui-platform) — shared theme and interface components.
-- [`deploy`](deploy) — Kubernetes manifests and an example Argo client role.
+- [`apps/workflow-builder`](apps/workflow-builder): standalone host, production and development gateways, and `mountWorkflowBuilder` / `unmountWorkflowBuilder` entry points.
+- [`packages/workflow-editor`](packages/workflow-editor): graph and YAML editors, workflow operations, and runtime clients.
+- [`packages/workflow-domain`](packages/workflow-domain): workflow types, parsing, generation, validation, layout, and simulation.
+- [`packages/platform-sdk`](packages/platform-sdk): host integration contracts, feature flags, permissions, events, and telemetry.
+- [`packages/ui-platform`](packages/ui-platform): shared theme and interface components.
+- [`deploy`](deploy): Kubernetes manifests and an example Argo client role.
 
 ## Development and verification
 
@@ -119,19 +133,19 @@ pnpm audit:check                     # Dependency audit policy
 pnpm test:oidc                       # Real OAuth2 Proxy with an ephemeral test issuer
 ```
 
-Browser tests require `openssl` on `PATH` and port 3000 available. Linux may need `pnpm exec playwright install --with-deps chromium`. The OIDC check requires a running Docker daemon and access to the pinned proxy image. Test credentials and upstream services are temporary fixtures.
+Browser tests need `openssl` on `PATH` and port 3000 available. On Linux, you may need `pnpm exec playwright install --with-deps chromium`. The OIDC check needs Docker running and access to the pinned proxy image. Tests use temporary credentials and upstream fixtures.
 
-`pnpm check` runs the type-checks, tests, build, and browser suite together. `pnpm start` runs the compiled gateway after a build and requires the runtime configuration described in the deployment guide; it does not load `.env.local`.
+`pnpm check` runs the type-checks, tests, build, and browser suite. After a build, `pnpm start` runs the compiled gateway with the [production runtime configuration](docs/production.md); it does not load `.env.local`.
 
 The [CI workflow](.github/workflows/ci.yaml) checks the workspace, browser behavior, the restricted production container, and OIDC login/header handling.
 
-**Recorded live compatibility check — October 23, 2026:** the compiled gateway passed workflow submission, completion, logs, resume/resubmit, and template lifecycle checks against **Argo Workflows 4.1.6** on **Kubernetes 1.37.0**, using **kind 0.33.0**. Artifact archiving and a real OIDC provider were outside this check's scope. See the [verification record and deployment checks](docs/production.md#recorded-live-compatibility-check) before using your own identity provider, policies, and workloads.
+**Recorded compatibility check (October 23, 2026):** the compiled gateway passed workflow submission, completion, logs, resume/resubmit, and template lifecycle checks against **Argo Workflows 4.1.6** on **Kubernetes 1.37.0**, using **kind 0.33.0**. The check did not cover artifact archiving or a real OIDC provider. Follow the [verification record and deployment checks](docs/production.md#recorded-live-compatibility-check) for your own identity provider, policies, and workloads; fixture tests alone do not verify your deployment.
 
 ## Contributing and support
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for the development workflow, checks, and pull-request guidance. Contributors are expected to adhere to the [Code of Conduct](CODE_OF_CONDUCT.md). Bug reports should include reproduction steps, the commit being tested, browser/runtime versions, and whether the problem occurs in development or production mode. Remove tokens, personal information, and sensitive workflow content before sharing logs or screenshots.
+Read [CONTRIBUTING.md](CONTRIBUTING.md) for the development and pull-request workflow, and follow the [Code of Conduct](CODE_OF_CONDUCT.md).
 
-Use [GitHub Issues](https://github.com/thajj/tiphys/issues) for bugs and feature proposals. See [SECURITY.md](SECURITY.md) for security reporting and the project's current support status.
+Use [GitHub Issues](https://github.com/thajj/tiphys/issues) for bugs and feature proposals. Include reproduction steps, the commit, browser/runtime versions, and whether you used development or production mode. Remove tokens, personal information, and sensitive workflow content from shared logs and screenshots. See [SECURITY.md](SECURITY.md) for security reporting and support status.
 
 ## License
 
