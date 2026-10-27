@@ -63,20 +63,35 @@ The capture updates three files:
 
 Inspect every image for current Tiphys branding, legible text, unclipped controls, and accurate sample content before committing it. Verify the supported actions through the test suite; an enabled control alone does not prove its request succeeds. Keep the README's fixture captions alongside the images. Capture only the supported workflow editor, templates, runs, and optional AI features.
 
-### Captioned walkthrough
+### Live product walkthrough
 
-To re-record and encode the opt-in README walkthrough (`docs/media/tiphys-showcase.gif` and `docs/media/tiphys-showcase.mp4`), ensure `ffmpeg` (`libx264`), `ffprobe`, and `gifsicle` are on `PATH`, then run:
+The showcase records real browser interaction with the compiled app. It starts with an empty canvas, drags components from Library, types task settings, draws connections, then copies the official Argo diamond example and pastes it into a new draft. Normal app animations stay enabled. Do not replace these actions with a sequence of screenshots.
+
+Install `ffmpeg` with `libvpx-vp9` and `libx264`, plus `ffprobe`, then run:
 
 ```sh
 RUN_SHOWCASE=1 pnpm exec playwright test tests/e2e/showcase.spec.ts --workers=1
-node scripts/render-showcase.mjs INPUT_WEBM --timing SHOWCASE_TIMING_JSON
+node scripts/render-showcase.mjs INPUT_WEBM --timing SHOWCASE_TIMING_JSON --poster-seconds POSTER_SECONDS
 ```
 
-Replace `INPUT_WEBM` and `SHOWCASE_TIMING_JSON` with the recording and `showcase-timing.json` attached to the same successful Playwright test. They are saved under that test's `test-results/` directory. The recording is opt-in and does not run during the regular browser suite. Its assertions verify the demonstrated actions through the production gateway before the clip is ready to publish; upstream responses still come from deterministic fixtures.
+Use the recording and `showcase-timing.json` attached to the same successful test under `test-results/`. `POSTER_SECONDS` selects a frame within the trimmed output; choose a readable view of the connected graph. The recording is opt-in and needs access to GitHub for the official example. It uses temporary sample services and credentials, and does not execute workloads.
 
-The timing file contains trim points, reading holds, and camera cues in the original recording's time and coordinate space. The renderer adds gentle zooms with smooth starts and stops inside a fixed, rounded frame; the caption footer stays stationary. The MP4 renders camera motion at 60 fps from a 25 fps UI recording. The GIF uses 10 fps, with its width adjusted to stay within the renderer's 5 MiB size limit. Keep both outputs and the static screenshots together.
+The renderer produces four files in `docs/media/`:
 
-Watch the complete MP4 and GIF before committing them. Check that the opening graph fits, focused controls remain visible, cursor paths and camera moves are smooth, and captions stay legible at the README's display size. Leave enough still time to read the YAML, AI response, and logs. Confirm that the sample-service disclosure remains visible and that every chapter reflects a supported feature. The renderer checks decoding, duration, and file size; it does not replace this visual review.
+- `tiphys-showcase.webm`: primary VP9 video at 1600 × 1000.
+- `tiphys-showcase.mp4`: H.264 fallback encoded from the same source.
+- `tiphys-showcase-poster.png`: a full-resolution still for README and article previews.
+- `tiphys-showcase.json`: chapter times, reading holds, source frame rate, source hash, and export details.
+
+The source recording contains the live UI motion. Camera movement renders at 60 fps; this does not turn the browser capture into native 60 fps footage. Keep captions outside the app and use brief zooms only where they make a control or value easier to read. Preserve the whole drag or connection gesture. Allow time to read the resulting settings and YAML.
+
+Use `--output DIRECTORY` to render a review copy before replacing the committed media. The renderer checks dimensions, codecs, duration, and complete decoding. Watch both exports in full and inspect the poster before committing. Check text legibility, cursor movement, visible drag previews, connection alignment, chapter timing, and the sample-service disclosure. Keep the three static screenshots alongside the video.
+
+For local review, serve the repository over HTTP and open `docs/media/preview.html`. The player uses the same chapter metadata and provides playback controls, seeking, and fullscreen.
+
+For GitHub playback, attach the reviewed WebM through the README editor and copy its stable `github.com/user-attachments/assets/…` URL. A standalone attachment URL renders a video player in Markdown. Keep the repository copies as downloads and verify anonymous playback after saving the README. Never use the temporary signed CDN URL from the player.
+
+The poster supports article previews and the local chapter player. GitHub repository file links and arbitrary Medium video links do not provide an inline player. Use a supported video provider for inline Medium playback if one is available; otherwise link the poster to the video. A video preserves the recorded interaction, but it is not a clickable replica of the product.
 
 ## Pull requests
 

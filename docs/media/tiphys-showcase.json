@@ -1,0 +1,147 @@
+{
+  "schemaVersion": 1,
+  "completed": true,
+  "capture": {
+    "kind": "continuous-browser-video",
+    "nativeFrameRate": 25,
+    "reducedMotion": "no-preference",
+    "actions": "Native mouse drag, paced typing, GitHub Copy raw file, and keyboard paste"
+  },
+  "provenance": {
+    "url": "https://github.com/argoproj/argo-workflows/blob/main/examples/dag-diamond.yaml",
+    "fixture": "tests/e2e/fixtures/official-dag-diamond.yaml",
+    "copiedAndVerified": true
+  },
+  "source": {
+    "sha256": "bc675565b5bd357a4de232ec6bd310bb80cebf6b6d052d835dda32c921aabdc5",
+    "width": 1600,
+    "height": 1000,
+    "frameRate": 25,
+    "startSeconds": 15.492,
+    "endSeconds": 134.454
+  },
+  "motion": "UI motion comes from the browser recording at its native frame rate. Exported camera movement is evaluated at 60 fps.",
+  "durationSeconds": 118.962,
+  "primary": "tiphys-showcase.webm",
+  "fallback": "tiphys-showcase.mp4",
+  "poster": {
+    "file": "tiphys-showcase-poster.png",
+    "seconds": 117,
+    "width": 1600,
+    "height": 1000
+  },
+  "chapters": [
+    {
+      "chapter": 1,
+      "title": "Drag components onto the canvas",
+      "seconds": 0
+    },
+    {
+      "chapter": 2,
+      "title": "Configure each step",
+      "seconds": 18.686
+    },
+    {
+      "chapter": 3,
+      "title": "Draw the dependencies",
+      "seconds": 48.425
+    },
+    {
+      "chapter": 4,
+      "title": "Copy an official Argo example",
+      "seconds": 86.548
+    },
+    {
+      "chapter": 5,
+      "title": "Paste and keep working",
+      "seconds": 93.967
+    }
+  ],
+  "readingHolds": [
+    {
+      "scene": "Empty canvas and component library",
+      "startSeconds": 0.001,
+      "endSeconds": 2.006
+    },
+    {
+      "scene": "Three steps added from Library",
+      "startSeconds": 16.878,
+      "endSeconds": 18.686
+    },
+    {
+      "scene": "Container settings",
+      "startSeconds": 24.305,
+      "endSeconds": 26.112
+    },
+    {
+      "scene": "HTTP method and URL",
+      "startSeconds": 34.663,
+      "endSeconds": 36.47
+    },
+    {
+      "scene": "Manual approval has no time limit",
+      "startSeconds": 43.584,
+      "endSeconds": 45.189
+    },
+    {
+      "scene": "Connected horizontal workflow",
+      "startSeconds": 62.982,
+      "endSeconds": 64.785
+    },
+    {
+      "scene": "Connected vertical workflow",
+      "startSeconds": 72.892,
+      "endSeconds": 74.894
+    },
+    {
+      "scene": "Generated Argo YAML",
+      "startSeconds": 82.641,
+      "endSeconds": 85.643
+    },
+    {
+      "scene": "Official Argo source",
+      "startSeconds": 88.78,
+      "endSeconds": 90.84
+    },
+    {
+      "scene": "Official YAML copied",
+      "startSeconds": 92.5,
+      "endSeconds": 93.722
+    },
+    {
+      "scene": "YAML import choice",
+      "startSeconds": 94.897,
+      "endSeconds": 96.699
+    },
+    {
+      "scene": "Imported diamond workflow",
+      "startSeconds": 106.136,
+      "endSeconds": 108.639
+    },
+    {
+      "scene": "Imported graph and generated YAML",
+      "startSeconds": 115.459,
+      "endSeconds": 118.961
+    }
+  ],
+  "exports": [
+    {
+      "file": "tiphys-showcase.webm",
+      "codec": "vp9",
+      "width": 1600,
+      "height": 1000,
+      "frameRate": 60,
+      "durationSeconds": 118.967,
+      "bytes": 15664546
+    },
+    {
+      "file": "tiphys-showcase.mp4",
+      "codec": "h264",
+      "width": 1600,
+      "height": 1000,
+      "frameRate": 60,
+      "durationSeconds": 118.966667,
+      "bytes": 21743239
+    }
+  ]
+}

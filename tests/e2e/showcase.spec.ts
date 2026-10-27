@@ -1,16 +1,16 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
-import { writeFile } from "node:fs/promises";
-import { importSample, openEditor } from "./helpers";
+import { readFile, writeFile } from "node:fs/promises";
 
 const enabled = process.env.RUN_SHOWCASE === "1";
 const appSize = { width: 1600, height: 904 };
+const officialExampleUrl = "https://github.com/argoproj/argo-workflows/blob/main/examples/dag-diamond.yaml";
 type Point = { x: number; y: number };
 type CameraFrame = { videoSeconds: number; zoom: number; centerX: number; centerY: number; durationSeconds: number };
 test.use({
   viewport: { width: 1600, height: 1000 },
   deviceScaleFactor: 1,
   colorScheme: "dark",
-  reducedMotion: "reduce",
+  reducedMotion: "no-preference",
   video: enabled ? { mode: "on", size: { width: 1600, height: 1000 } } : "off",
 });
 
@@ -52,6 +52,51 @@ async function installPresentation(page: Page) {
       </div>`;
     document.body.appendChild(overlay);
     overlay.showPopover();
+    // Chromium recordings omit the OS pointer. This presentation-only pointer
+    // follows actual browser input, including native HTML drags and edge drags.
+    const cursor = document.getElementById("showcase-cursor")!;
+    const follow = (event: MouseEvent) => {
+      cursor.style.opacity = "1";
+      cursor.style.transform = `translate3d(${event.clientX}px,${event.clientY}px,0)`;
+    };
+    // Chromium does not include the operating system's HTML drag image in its
+    // video. Mirror the actual dragged Library card as a presentation guide.
+    let dragGuide: HTMLElement | null = null;
+    document.addEventListener("dragstart", event => {
+      const card = (event.target as Element).closest('#sidebar-panel [draggable="true"]');
+      if (!card) return;
+      dragGuide = card.cloneNode(true) as HTMLElement;
+      dragGuide.removeAttribute("draggable");
+      dragGuide.id = "showcase-drag-guide";
+      // Theme variables are scoped to #root. Preserve the real card's computed
+      // colors when moving its presentation clone into the top-layer overlay.
+      const cardStyle = getComputedStyle(card);
+      dragGuide.style.backgroundColor = cardStyle.backgroundColor;
+      dragGuide.style.color = cardStyle.color;
+      const originals = Array.from(card.querySelectorAll("*"));
+      dragGuide.querySelectorAll("*").forEach((element, index) => {
+        const sourceStyle = getComputedStyle(originals[index]);
+        const style = (element as HTMLElement).style;
+        style.color = sourceStyle.color;
+        style.backgroundColor = sourceStyle.backgroundColor;
+        style.borderColor = sourceStyle.borderColor;
+      });
+      Object.assign(dragGuide.style, { position: "absolute", left: "0", top: "0", width: "196px", opacity: ".95", border: "2px solid #5ee6ed", boxShadow: "0 10px 28px #0b122233", pointerEvents: "none", transform: `translate3d(${event.clientX + 16}px,${event.clientY + 16}px,0)` });
+      overlay.appendChild(dragGuide);
+    }, true);
+    document.addEventListener("dragover", event => {
+      if (dragGuide) dragGuide.style.transform = `translate3d(${event.clientX + 16}px,${event.clientY + 16}px,0)`;
+    }, true);
+    const clearDragGuide = () => { dragGuide?.remove(); dragGuide = null; };
+    document.addEventListener("dragend", clearDragGuide, true);
+    document.addEventListener("drop", clearDragGuide, true);
+    document.addEventListener("mousemove", follow, true);
+    document.addEventListener("dragover", follow, true);
+    document.addEventListener("mousedown", event => {
+      const pulse = document.getElementById("showcase-pulse")!;
+      Object.assign(pulse.style, { left: `${event.clientX}px`, top: `${event.clientY}px` });
+      pulse.animate([{ opacity: .55, transform: "scale(.45)" }, { opacity: 0, transform: "scale(1.45)" }], { duration: 450, easing: "ease-out" });
+    }, true);
   });
 }
 
@@ -65,46 +110,48 @@ async function raisePresentation(page: Page) {
   });
 }
 
-async function movePointer(page: Page, point: Point) {
-  await page.evaluate(async point => {
-    const cursor = document.getElementById("showcase-cursor")!;
-    window.clearTimeout(Number(cursor.dataset.idleTimer));
-    cursor.style.opacity = "1";
-    const start = { x: Number(cursor.dataset.x), y: Number(cursor.dataset.y) };
-    const dx = point.x - start.x;
-    const dy = point.y - start.y;
-    const distance = Math.hypot(dx, dy);
-    const duration = Math.min(850, Math.max(350, 320 + distance * .38));
-    const bend = Math.min(44, distance * .08);
-    const control = {
-      x: (start.x + point.x) / 2 - dy / Math.max(distance, 1) * bend,
-      y: (start.y + point.y) / 2 + dx / Math.max(distance, 1) * bend,
-    };
-    await new Promise<void>(resolve => {
-      const started = performance.now();
-      const animate = (now: number) => {
-        const progress = Math.min(1, (now - started) / duration);
-        const eased = progress < .5 ? 4 * progress ** 3 : 1 - (-2 * progress + 2) ** 3 / 2;
-        const remaining = 1 - eased;
-        const x = remaining ** 2 * start.x + 2 * remaining * eased * control.x + eased ** 2 * point.x;
-        const y = remaining ** 2 * start.y + 2 * remaining * eased * control.y + eased ** 2 * point.y;
-        cursor.style.transform = `translate3d(${x}px,${y}px,0)`;
-        if (progress < 1) requestAnimationFrame(animate);
-        else resolve();
-      };
-      requestAnimationFrame(animate);
-    });
-    cursor.dataset.x = String(point.x);
-    cursor.dataset.y = String(point.y);
-    cursor.dataset.idleTimer = String(window.setTimeout(() => { cursor.style.opacity = "0"; }, 1100));
-  }, point);
+let pointer: Point = { x: 1460, y: 780 };
+
+async function movePointer(page: Page, point: Point, milliseconds = 650) {
+  const from = pointer;
+  const steps = Math.max(12, Math.ceil(milliseconds / 25));
+  for (let step = 1; step <= steps; step += 1) {
+    const progress = step / steps;
+    const eased = progress * progress * (3 - 2 * progress);
+    await page.mouse.move(from.x + (point.x - from.x) * eased, from.y + (point.y - from.y) * eased);
+    await page.waitForTimeout(milliseconds / steps);
+  }
+  pointer = point;
+}
+
+async function center(target: Locator): Promise<Point> {
+  await target.scrollIntoViewIfNeeded();
+  const box = await target.boundingBox();
+  if (!box) throw new Error("The showcase control has no visible bounds");
+  return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+}
+
+async function drag(page: Page, from: Point, to: Point) {
+  await movePointer(page, from);
+  await page.mouse.down();
+  // Two small movements start Chromium's native HTML drag before the paced path.
+  await movePointer(page, { x: from.x + 8, y: from.y + 4 }, 120);
+  await movePointer(page, to, 1200);
+  await page.mouse.move(to.x, to.y); // Ensure a dragover at the final drop target.
+  await page.waitForTimeout(120);
+  await page.mouse.up();
+  await page.waitForTimeout(350);
 }
 
 test("records the feature showcase through the production gateway", async ({ page }, testInfo) => {
   test.skip(!enabled, "Opt-in documentation recording: RUN_SHOWCASE=1");
-  test.setTimeout(120000);
+  test.setTimeout(180000);
   const recordingStarted = Date.now();
   const video = page.video();
+  const officialSource = await readFile("tests/e2e/fixtures/official-dag-diamond.yaml", "utf8");
+  let copiedOfficialSource = false;
+  let savedAuthoringDraft = false;
+  let completed = false;
   const errors: string[] = [];
   const chapters: Array<{ chapter: number; title: string; videoSeconds: number }> = [];
   const camera: CameraFrame[] = [];
@@ -112,10 +159,19 @@ test("records the feature showcase through the production gateway", async ({ pag
   let cameraState = { zoom: 1, centerX: appSize.width / 2, centerY: appSize.height / 2 };
   let trimStartSeconds = 0;
   let trimEndSeconds = 0;
-  page.on("pageerror", error => errors.push(error.message));
+  page.on("pageerror", error => {
+    if (new URL(page.url()).origin === new URL(testInfo.project.use.baseURL!).origin) errors.push(error.message);
+  });
+  page.on("response", async response => {
+    if (!response.url().includes("/session/drafts/") || response.request().method() !== "PUT" || !response.ok()) return;
+    const draft = await response.json();
+    savedAuthoringDraft ||= draft.sessions.some((session: { nodes: Array<{ data: { label: string } }>; edges: unknown[] }) =>
+      session.nodes.length === 3 && session.edges.length === 2 &&
+      ["prepare", "check-api", "approve"].every(label => session.nodes.some(node => node.data.label === label)));
+  });
 
   // Reading time begins after the camera settles, so tighter crops remain legible
-  // at the README GIF's size. Keep these intervals in the export's QA metadata.
+  // at the embedded player size. Keep these intervals in the export's QA metadata.
   const readFor = async (scene: string, milliseconds: number) => {
     const startSeconds = (Date.now() - recordingStarted) / 1000;
     await page.waitForTimeout(milliseconds);
@@ -136,12 +192,9 @@ test("records the feature showcase through the production gateway", async ({ pag
     camera.push({ videoSeconds: (Date.now() - recordingStarted) / 1000, ...next, durationSeconds });
   };
 
-  const pointAt = async (page: Page, target: Locator, click = false) => {
-    await target.scrollIntoViewIfNeeded();
-    const box = await target.boundingBox();
-    if (!box) throw new Error("The showcase control has no visible bounds");
-    const point = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
-    expect(point.y).toBeLessThan(appSize.height); // Captions must not obscure the action.
+  const pointAt = async (target: Locator, click = false) => {
+    const point = await center(target);
+    expect(point.y).toBeLessThan(appSize.height);
     const halfWidth = appSize.width / cameraState.zoom / 2;
     const halfHeight = appSize.height / cameraState.zoom / 2;
     if (cameraState.zoom > 1 && (Math.abs(point.x - cameraState.centerX) > halfWidth - 24
@@ -151,21 +204,115 @@ test("records the feature showcase through the production gateway", async ({ pag
     }
     await movePointer(page, point);
     if (click) {
-      await page.evaluate(point => {
-        const pulse = document.getElementById("showcase-pulse")!;
-        Object.assign(pulse.style, { left: `${point.x}px`, top: `${point.y}px` });
-        pulse.animate([{ opacity: .55, transform: "scale(.45)" }, { opacity: 0, transform: "scale(1.45)" }], { duration: 450, easing: "ease-out" });
-        document.getElementById("showcase-pointer")!.animate([
-          { transform: "scale(1)" }, { transform: "scale(.87)", offset: .35 }, { transform: "scale(1)" },
-        ], { duration: 220, easing: "ease-out" });
-      }, point);
       await target.click();
-      await page.waitForTimeout(160);
+      await page.waitForTimeout(180);
     }
   };
 
+  const field = (label: string) => page.locator("#config-panel label")
+    .filter({ hasText: new RegExp(`^${label}$`) }).locator("..").locator("input");
+  const typeValue = async (target: Locator, value: string) => {
+    await pointAt(target, true);
+    await target.press("ControlOrMeta+A");
+    if (value) await target.pressSequentially(value, { delay: 65 });
+    else await target.press("Backspace");
+    await target.press("Tab");
+    await expect(target).toHaveValue(value);
+  };
+  const node = (label: string) => page.locator(".react-flow__node")
+    .filter({ has: page.getByRole("heading", { name: label, exact: true }) });
+  const closeInspector = async () => {
+    await pointAt(page.getByRole("button", { name: "Toggle inspector", exact: true }), true);
+    await expect(page.getByTestId("workflow-inspector-drawer")).toHaveAttribute("aria-hidden", "true");
+    await page.waitForTimeout(350);
+  };
+
+  const clearCanvasSelection = async () => {
+    const point = await page.evaluate(() => {
+      const canvas = document.querySelector(".react-flow")!.getBoundingClientRect();
+      for (const y of [canvas.bottom - 150, canvas.top + 100]) for (const x of [600, 800, 1000]) {
+        if (document.elementFromPoint(x, y)?.classList.contains("react-flow__pane")) return { x, y };
+      }
+      return null;
+    });
+    expect(point, "A blank canvas point is available to clear selection").not.toBeNull();
+    await movePointer(page, point!);
+    await page.mouse.click(point!.x, point!.y);
+  };
+  const assertAttachedEdges = async () => {
+    const errors = await page.evaluate(() => Array.from(document.querySelectorAll(".react-flow__edge")).map(edge => {
+      const match = edge.getAttribute("aria-label")?.match(/^Edge from (.+) to (.+)$/);
+      if (!match) throw new Error("The rendered edge is missing its source/target label");
+      const path = edge.querySelector(".react-flow__edge-path") as SVGPathElement;
+      const matrix = path.getScreenCTM();
+      if (!matrix) throw new Error("The rendered edge has no screen transform");
+      const anchor = (id: string, kind: string) => {
+        const node = Array.from(document.querySelectorAll(".react-flow__node")).find(node => node.getAttribute("data-id") === id);
+        const handle = node?.querySelector(`.react-flow__handle.${kind}`);
+        if (!handle) throw new Error("The rendered edge has no handle");
+        const box = handle.getBoundingClientRect();
+        const side = ["left", "right", "top", "bottom"].find(side => handle.classList.contains(`react-flow__handle-${side}`));
+        return { x: side === "left" ? box.left : side === "right" ? box.right : (box.left + box.right) / 2,
+          y: side === "top" ? box.top : side === "bottom" ? box.bottom : (box.top + box.bottom) / 2 };
+      };
+      const start = path.getPointAtLength(0).matrixTransform(matrix);
+      const end = path.getPointAtLength(path.getTotalLength()).matrixTransform(matrix);
+      const source = anchor(match[1], "source");
+      const target = anchor(match[2], "target");
+      return Math.max(Math.hypot(start.x - source.x, start.y - source.y), Math.hypot(end.x - target.x, end.y - target.y));
+    }));
+    expect(errors.length).toBeGreaterThan(0);
+    expect(Math.max(...errors), "Arrow endpoints stay attached to their handle dots").toBeLessThan(1);
+  };
+
+  const graphGeometry = async () => {
+    const canvas = await page.locator(".react-flow").boundingBox();
+    const drawer = page.getByTestId("workflow-inspector-drawer");
+    const inspector = await drawer.getAttribute("aria-hidden") === "false" ? await drawer.boundingBox() : null;
+    const libraryPanel = await page.locator("#sidebar-panel").isVisible() ? await page.locator("#sidebar-panel").boundingBox() : null;
+    const boxes = await Promise.all((await page.locator(".react-flow__node").all()).map(item => item.boundingBox()));
+    if (!canvas || !boxes.length || boxes.some(box => !box)) throw new Error("The graph has no measurable canvas or nodes");
+    const nodes = boxes.filter(box => box !== null);
+    const area = {
+      left: libraryPanel ? libraryPanel.x + libraryPanel.width + 32 : canvas.x + 32,
+      top: canvas.y + 80,
+      right: (inspector?.x ?? canvas.x + canvas.width) - 76,
+      bottom: canvas.y + canvas.height - 92,
+    };
+    const bounds = { left: Math.min(...nodes.map(box => box.x)), top: Math.min(...nodes.map(box => box.y)), right: Math.max(...nodes.map(box => box.x + box.width)), bottom: Math.max(...nodes.map(box => box.y + box.height)) };
+    return { area, nodes, bounds };
+  };
+  const frameGraph = async () => {
+    await page.waitForTimeout(850); // Wait for the app's layout/fit transition.
+    for (let step = 0; step < 12; step += 1) {
+      const { area, bounds, nodes } = await graphGeometry();
+      if (bounds.right - bounds.left <= area.right - area.left && bounds.bottom - bounds.top <= area.bottom - area.top && Math.max(...nodes.map(box => box.width)) <= 300) break;
+      await pointAt(page.getByRole("button", { name: "zoom out", exact: true }), true);
+      await page.waitForTimeout(300);
+    }
+    const { area, bounds } = await graphGeometry();
+    const delta = { x: (area.left + area.right - bounds.left - bounds.right) / 2, y: (area.top + area.bottom - bounds.top - bounds.bottom) / 2 };
+    if (Math.abs(delta.x) > 1 || Math.abs(delta.y) > 1) {
+      const start = await page.evaluate(({ area, delta }) => {
+        for (const fy of [.2, .8, .4, .6]) for (const fx of [.5, .75, .25]) {
+          const point = { x: area.left + (area.right - area.left) * fx, y: area.top + (area.bottom - area.top) * fy };
+          if (point.x + delta.x < area.left || point.x + delta.x > area.right || point.y + delta.y < area.top || point.y + delta.y > area.bottom) continue;
+          if (document.elementFromPoint(point.x, point.y)?.classList.contains("react-flow__pane")) return point;
+        }
+        return null;
+      }, { area, delta });
+      expect(start, "A blank canvas point is available for panning").not.toBeNull();
+      await drag(page, start!, { x: start!.x + delta.x, y: start!.y + delta.y });
+    }
+    await expect.poll(async () => {
+      const { area, nodes } = await graphGeometry();
+      return nodes.every(box => box.x >= area.left - 1 && box.y >= area.top - 1 && box.x + box.width <= area.right + 1 && box.y + box.height <= area.bottom + 1);
+    }, { message: "Every node remains visible beside the Library and inspector" }).toBe(true);
+    if (await page.locator(".react-flow__edge").count()) await assertAttachedEdges();
+  };
+
   const chapter = async (number: number, title: string, description: string) => {
-    chapters.push({ chapter: number, title, videoSeconds: (Date.now() - recordingStarted) / 1000 });
+    if (chapters.at(-1)?.chapter !== number) chapters.push({ chapter: number, title, videoSeconds: (Date.now() - recordingStarted) / 1000 });
     await page.evaluate(({ number, title, description }) => {
       document.getElementById("showcase-number")!.textContent = String(number).padStart(2, "0");
       document.getElementById("showcase-title")!.textContent = title;
@@ -175,109 +322,185 @@ test("records the feature showcase through the production gateway", async ({ pag
   };
 
   try {
-    await openEditor(page, testInfo);
-    await importSample(page, "showcase-pipeline");
+    // These dummy credentials are scoped to the local app, never sent to GitHub.
+    const localOrigin = new URL(testInfo.project.use.baseURL!).origin;
+    await page.context().setExtraHTTPHeaders({});
+    await page.setExtraHTTPHeaders({});
+    await page.route(`${localOrigin}/**`, route => route.continue({ headers: {
+      ...route.request().headers(),
+      "X-Auth-Proxy-Secret": "e2e-proxy-proof-at-least-32-characters",
+      "X-Auth-Request-User": `${testInfo.testId}:${testInfo.retry}`,
+      "X-Auth-Request-Groups": "editors",
+    } }));
+    await page.goto("/");
+    await expect(page.getByRole("button", { name: "New workflow", exact: true })).toBeVisible();
+    await expect(page.locator(".react-flow__node")).toHaveCount(0);
     await page.evaluate(() => document.fonts.ready);
     await installPresentation(page);
-    // Let the reserved footer resize the app before fitting the opening graph.
-    await page.evaluate(() => new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
-    await page.getByRole("button", { name: "fit view", exact: true }).click();
-    // Leave space above the first node for the floating canvas toolbar.
-    await page.getByRole("button", { name: "zoom out", exact: true }).click();
-    await expect.poll(async () => {
-      const canvas = await page.locator(".react-flow").boundingBox();
-      const nodes = await page.locator(".react-flow__node").all();
-      if (!canvas || nodes.length !== 4) return false;
-      const boxes = await Promise.all(nodes.map(node => node.boundingBox()));
-      return boxes.every(box => box && box.y >= canvas.y + 55 && box.x >= canvas.x
-        && box.x + box.width <= canvas.x + canvas.width
-        && box.y + box.height <= canvas.y + canvas.height);
-    }).toBe(true);
+    const library = page.getByRole("button", { name: "Library", exact: true });
+    if (!await page.locator("#sidebar-panel").isVisible()) await library.click();
+    await expect(page.locator('#sidebar-panel [draggable="true"]').filter({ has: page.getByText("Container", { exact: true }) })).toBeVisible();
 
-    await chapter(1, "Build visually. Keep the details.", "Connect steps, inspect dependencies, and configure each task.");
+    // React Flow fits its first node at 2× on an empty canvas. Prepare a useful
+    // working zoom through real controls, then remove this disposable setup node
+    // before the exported recording begins. Subsequent drops retain this view.
+    const containerCard = page.locator('#sidebar-panel [draggable="true"]').filter({ has: page.getByText("Container", { exact: true }) });
+    await drag(page, await center(containerCard), { x: 400, y: 350 });
+    await expect(page.locator(".react-flow__node")).toHaveCount(1);
+    await closeInspector();
+    await page.waitForTimeout(900);
+    while ((await node("Container").boundingBox())!.width > 230) {
+      await pointAt(page.getByRole("button", { name: "zoom out", exact: true }), true);
+      await page.waitForTimeout(300);
+    }
+    await pointAt(node("Container"), true);
+    await node("Container").focus();
+    await page.keyboard.press("Backspace");
+    await expect(page.locator(".react-flow__node")).toHaveCount(0);
+    if (await page.getByTestId("workflow-inspector-drawer").getAttribute("aria-hidden") === "false") await closeInspector();
+    await page.waitForTimeout(400);
+
+    await chapter(1, "Drag components onto the canvas", "Start with an empty workflow. Add the steps you need from Library.");
     await page.waitForTimeout(400);
     trimStartSeconds = (Date.now() - recordingStarted) / 1000;
     chapters[0].videoSeconds = trimStartSeconds;
     frame(1, 800, 452, 0);
-    await page.waitForTimeout(2400);
-    await pointAt(page, page.locator(".react-flow__node").filter({ hasText: "publish" }), true);
-    await expect(page.locator('input[value="python:3.13-alpine"]')).toBeVisible();
-    frame(1.8, 1300, 400);
-    await page.waitForTimeout(900);
-    await readFor("Node settings", 2500);
+    await readFor("Empty canvas and component library", 2000);
+    for (const [index, [label, point]] of ([
+      ["Container", { x: 400, y: 350 }],
+      ["HTTP Request", { x: 710, y: 400 }],
+      ["Suspend", { x: 1020, y: 450 }],
+    ] as const).entries()) {
+      const card = page.locator('#sidebar-panel [draggable="true"]').filter({ has: page.getByText(label, { exact: true }) });
+      await drag(page, await center(card), point);
+      await expect(page.locator(".react-flow__node")).toHaveCount(index + 1);
+      await closeInspector();
+      await page.waitForTimeout(500);
+    }
+    await readFor("Three steps added from Library", 1800);
 
-    await chapter(2, "See the manifest behind the graph.", "Review and edit Argo YAML with local schema validation.");
-    await pointAt(page, page.getByRole("button", { name: "YAML", exact: true }), true);
-    await expect(page.locator(".monaco-editor .view-lines")).toContainText("apiVersion:");
+    await chapter(2, "Configure each step", "Set a container image, an HTTP request, and a manual approval.");
+    await pointAt(node("Container"), true);
+    await expect(field("Step Name")).toHaveValue("Container");
+    frame(1.55, 1250, 430);
+    await page.waitForTimeout(900);
+    await typeValue(field("Step Name"), "prepare");
+    await typeValue(page.getByPlaceholder("e.g. alpine:latest", { exact: true }), "busybox:1.37");
+    await expect(page.locator("#config-panel .monaco-editor .view-lines")).toContainText("echo hello");
+    await readFor("Container settings", 1800);
+    frame();
+    await page.waitForTimeout(900);
+    await closeInspector();
+
+    await pointAt(node("HTTP Req"), true);
+    await expect(field("Step Name")).toHaveValue("HTTP Req");
+    frame(1.55, 1250, 430);
+    await page.waitForTimeout(900);
+    await typeValue(field("Step Name"), "check-api");
+    await typeValue(page.getByPlaceholder("https://api...", { exact: true }), "https://example.com");
+    await expect(page.locator("#config-panel select")).toHaveValue("GET");
+    await readFor("HTTP method and URL", 1800);
+    frame();
+    await page.waitForTimeout(900);
+    await closeInspector();
+
+    await pointAt(node("Pause"), true);
+    await expect(field("Step Name")).toHaveValue("Pause");
+    frame(1.55, 1250, 430);
+    await page.waitForTimeout(900);
+    await typeValue(field("Step Name"), "approve");
+    await typeValue(page.getByPlaceholder("60s", { exact: true }), "");
+    await expect(node("approve")).toContainText("Forever");
+    await readFor("Manual approval has no time limit", 1600);
+    frame();
+    await page.waitForTimeout(900);
+    await closeInspector();
+
+    await clearCanvasSelection();
+    await chapter(3, "Draw the dependencies", "Connect output dots to input dots, then arrange the workflow.");
+    for (const [index, [from, to]] of [["prepare", "check-api"], ["check-api", "approve"]].entries()) {
+      await drag(page, await center(node(from).locator(".react-flow__handle.source")), await center(node(to).locator(".react-flow__handle.target")));
+      await expect(page.locator(".react-flow__edge")).toHaveCount(index + 1);
+      await page.waitForTimeout(650);
+    }
+    await pointAt(page.getByRole("button", { name: "Auto-arrange layout", exact: true }), true);
+    await frameGraph();
+    await page.screenshot({ path: testInfo.outputPath("connected-workflow.png") });
+    await readFor("Connected horizontal workflow", 1800);
+    await pointAt(page.getByRole("button", { name: "Toggle layout direction", exact: true }), true);
+    await frameGraph();
+    await readFor("Connected vertical workflow", 2000);
+    await pointAt(node("prepare"), true);
+    await pointAt(page.getByRole("button", { name: "YAML", exact: true }), true);
+    await expect(page.locator(".monaco-editor .view-lines")).toContainText("busybox:1.37");
     await expect(page.getByText("0 errors", { exact: true })).toBeVisible();
-    await pointAt(page, page.getByRole("button", { name: "Edit", exact: true }), true);
-    frame(2, 1300, 370);
+    await frameGraph();
+    frame(1.55, 1250, 430);
     await page.waitForTimeout(900);
-    await readFor("YAML manifest", 4000);
-
-    await chapter(3, "Turn an idea into a starting workflow.", "Describe the pipeline and bring the generated draft onto the canvas.");
-    await pointAt(page, page.getByRole("button", { name: "AI Ask", exact: true }), true);
-    const prompt = page.getByRole("textbox", { name: "Describe the workflow" });
-    // The prompt and Generate button sit lower than the YAML editor's header.
-    frame(2, 1300, 678);
-    await page.waitForTimeout(900);
-    await pointAt(page, prompt);
-    await prompt.fill("Collect sample records, validate and transform them in parallel, then publish a summary. Use Python and a 120-second deadline.");
-    await readFor("AI prompt", 4500);
+    await readFor("Generated Argo YAML", 3000);
     frame();
     await page.waitForTimeout(900);
-    const generated = page.waitForResponse(response => response.url().endsWith("/ai/workflow/generate") && response.request().method() === "POST");
-    await pointAt(page, page.getByRole("button", { name: "Generate Workflow", exact: true }), true);
-    expect((await generated).status()).toBe(200);
-    await expect(page.getByRole("dialog")).toContainText("AI Generated Workflow");
+    await expect.poll(() => savedAuthoringDraft, { message: "The authored workflow was saved before leaving the app" }).toBe(true);
+
+    await chapter(4, "Copy an official Argo example", "Open dag-diamond.yaml in the Argo Workflows repository.");
+    await page.waitForTimeout(1200);
+    await page.context().grantPermissions(["clipboard-read", "clipboard-write"], { origin: "https://github.com" });
+    await page.goto(officialExampleUrl, { waitUntil: "domcontentloaded" });
+    const copyRaw = page.getByRole("button", { name: "Copy raw file", exact: true });
+    await expect(copyRaw).toBeVisible({ timeout: 30000 });
+    await installPresentation(page);
+    await chapter(4, "Copy an official Argo example", "github.com/argoproj/argo-workflows · examples/dag-diamond.yaml");
+    frame();
+    await readFor("Official Argo source", 2000);
+    await pointAt(copyRaw, true);
+    const normalize = (value: string) => value.replace(/\r\n/g, "\n").trim();
+    await expect.poll(async () => normalize(await page.evaluate(() => navigator.clipboard.readText())), { message: "GitHub Copy raw file places the official YAML on the clipboard", timeout: 15000 }).toBe(normalize(officialSource));
+    copiedOfficialSource = true;
+    await readFor("Official YAML copied", 1200);
+
+    await page.goto("/");
+    await expect(page.locator(".react-flow__node")).toHaveCount(3);
+    await expect(page.locator(".react-flow__edge")).toHaveCount(2);
+    await installPresentation(page);
+    await chapter(5, "Paste and keep working", "Paste the YAML onto the canvas. Open it in a new tab to keep your first draft.");
+    frame();
+    // The source clipboard survives navigation. Paste through the browser's
+    // real keyboard shortcut; no synthetic ClipboardEvent or graph injection.
+    await movePointer(page, { x: 800, y: 700 });
+    await page.mouse.click(800, 700);
+    await page.keyboard.press("ControlOrMeta+V");
+    await expect(page.getByRole("dialog")).toContainText("pasted-workflow.yaml");
     await raisePresentation(page);
-    await page.waitForTimeout(600);
-    await pointAt(page, page.getByRole("button", { name: /Replace Current/ }), true);
+    await readFor("YAML import choice", 1800);
+    await pointAt(page.getByRole("button", { name: /^Open in New Tab/ }), true);
     await expect(page.locator(".react-flow__node")).toHaveCount(4);
-    await page.waitForTimeout(1300);
-
-    await chapter(4, "Review before you run.", "Ask for feedback on dependencies, retries, and resource budgets.");
-    const analyzed = page.waitForResponse(response => response.url().endsWith("/ai/workflow/analyze") && response.request().method() === "POST");
-    await pointAt(page, page.getByRole("button", { name: "Analyze with AI", exact: true }), true);
-    const analysis = await analyzed;
-    expect(analysis.status()).toBe(200);
-    await expect(page.getByRole("dialog")).toContainText((await analysis.json()).content);
-    await raisePresentation(page);
-    frame(1.8, 800, 350);
-    await page.waitForTimeout(900);
-    await readFor("Workflow analysis", 6000);
-    frame();
-    await page.waitForTimeout(900);
-    await pointAt(page, page.getByRole("button", { name: "Close Report", exact: true }), true);
-
-    await chapter(5, "Submit. Inspect. Follow the logs.", "Send the workflow through the gateway and inspect the returned run.");
-    const submitted = page.waitForResponse(response => response.url().endsWith("/api/platform/workflows/workflows") && response.request().method() === "POST");
-    await pointAt(page, page.getByRole("button", { name: "Run", exact: true }), true);
-    const submission = await submitted;
-    expect(submission.status()).toBe(200);
-    const workflow = await submission.json();
-    expect(workflow.kind).toBe("Workflow");
-    await expect(page.getByText("Submitted", { exact: true }).first()).toBeVisible();
-    await page.waitForTimeout(1400);
-    await pointAt(page, page.getByRole("button", { name: "View runs", exact: true }), true);
-    const workflowRow = page.getByTestId(`workflow-row-${workflow.metadata.name}`);
-    await pointAt(page, workflowRow, true);
-    await expect(page.locator("pre")).toContainText(`Hello from Tiphys: ${workflow.metadata.name}`);
-    const logBox = await page.locator("pre").boundingBox();
-    if (!logBox) throw new Error("The workflow logs have no visible bounds");
-    frame(2, logBox.x + logBox.width / 2, 275);
-    await page.waitForTimeout(900);
-    await readFor("Run status and logs", 4000);
+    await expect(page.locator(".react-flow__edge")).toHaveCount(4);
+    for (const label of ["A", "B", "C", "D"]) await expect(node(label)).toBeVisible();
+    await pointAt(page.getByRole("button", { name: "Toggle layout direction", exact: true }), true);
+    await frameGraph();
+    await readFor("Imported diamond workflow", 2500);
+    await pointAt(node("A"), true);
+    await pointAt(page.getByRole("button", { name: "YAML", exact: true }), true);
+    await expect(page.locator(".monaco-editor .view-lines")).toContainText("diamond");
+    await expect(page.getByText("0 errors", { exact: true })).toBeVisible();
+    await frameGraph();
+    await page.screenshot({ path: testInfo.outputPath("imported-graph-yaml.png") });
+    await readFor("Imported graph and generated YAML", 3500);
     expect(errors).toEqual([]);
     trimEndSeconds = (Date.now() - recordingStarted) / 1000;
+    completed = true;
+
   } finally {
+    if (!completed && !page.isClosed()) await page.screenshot({ path: testInfo.outputPath("incomplete-showcase.png") }).catch(() => {});
     trimEndSeconds ||= (Date.now() - recordingStarted) / 1000;
     const timingPath = testInfo.outputPath("showcase-timing.json");
     await writeFile(timingPath, JSON.stringify({
       timingBasis: "Seconds since test body began, immediately after the video page fixture was created; trim points are approximate.",
       startSeconds: trimStartSeconds, endSeconds: trimEndSeconds, durationSeconds: trimEndSeconds - trimStartSeconds, chapters,
       cameraCoordinateSpace: { width: appSize.width, height: appSize.height, origin: "top-left", units: "source pixels" },
-      camera, readingHolds,
+      camera, readingHolds, completed,
+      capture: { kind: "continuous-browser-video", nativeFrameRate: 25, reducedMotion: "no-preference", actions: "Native mouse drag, paced typing, GitHub Copy raw file, and keyboard paste" },
+      source: { url: officialExampleUrl, fixture: "tests/e2e/fixtures/official-dag-diamond.yaml", copiedAndVerified: copiedOfficialSource },
     }, null, 2));
     await testInfo.attach("showcase-timing.json", { path: timingPath, contentType: "application/json" });
     await page.close();

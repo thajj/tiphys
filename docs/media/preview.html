@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tiphys | Product walkthrough</title>
+<style>
+:root { color-scheme: dark; font-family: Inter, ui-sans-serif, system-ui, sans-serif; background: #080e19; color: #edf4fc; }
+* { box-sizing: border-box; }
+body { margin: 0; }
+main { width: min(1280px, calc(100% - 48px)); margin: 40px auto; }
+header { display: flex; align-items: center; justify-content: space-between; gap: 24px; margin-bottom: 28px; }
+.brand { display: flex; align-items: center; gap: 12px; font-weight: 700; font-size: 20px; letter-spacing: -.03em; }
+.brand img { width: 34px; height: 34px; }
+a { color: #81e1e9; text-underline-offset: 4px; }
+.eyebrow { color: #81e1e9; font-size: 12px; font-weight: 650; letter-spacing: .12em; text-transform: uppercase; }
+h1 { font-size: clamp(27px, 4vw, 42px); letter-spacing: -.04em; line-height: 1.15; margin: 12px 0; }
+.intro { color: #afbed1; margin: 0 0 26px; max-width: 75ch; line-height: 1.6; }
+video { display: block; width: 100%; aspect-ratio: 8 / 5; max-height: 75vh; object-fit: contain; border: 1px solid #2a3a50; border-radius: 12px; background: #0b1222; }
+nav { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin: 16px 0 20px; }
+button { text-align: left; font: inherit; background: #101b2c; border: 1px solid #27374e; border-radius: 9px; padding: 14px; color: #dbe5f3; cursor: pointer; line-height: 1.4; }
+button:hover, button[aria-current="true"] { border-color: #5dc9d5; background: #102c39; }
+button:focus-visible, a:focus-visible { outline: 3px solid #81e1e9; outline-offset: 4px; }
+button span { display: block; color: #81e1e9; font-size: 12px; font-variant-numeric: tabular-nums; margin-bottom: 6px; }
+footer { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 14px; color: #8fa3bc; font-size: 13px; line-height: 1.6; }
+footer p { margin: 0; max-width: 75ch; }
+.downloads { display: flex; gap: 18px; }
+@media (max-width: 600px) { main { width: calc(100% - 24px); margin-top: 22px; } header { margin-bottom: 24px; } nav { grid-template-columns: 1fr 1fr; } }
+</style>
+</head>
+<body><main>
+<header><div class="brand"><img src="../../apps/workflow-builder/public/brand/tiphys-mark-dark.svg" alt="">Tiphys</div><a href="https://github.com/thajj/tiphys">View the project</a></header>
+<div class="eyebrow">Product walkthrough</div>
+<h1>Build visually. Start from YAML.</h1>
+<p class="intro">Watch the actual editor as components move onto the canvas, settings change, connections form, and an official Argo example becomes a new workflow.</p>
+<video id="walkthrough" controls playsinline preload="metadata" poster="tiphys-showcase-poster.png" aria-label="Tiphys live product walkthrough">
+<source src="tiphys-showcase.webm" type="video/webm">
+<source src="tiphys-showcase.mp4" type="video/mp4">
+<a href="tiphys-showcase.mp4">Download the walkthrough</a>
+</video>
+<nav aria-label="Walkthrough chapters" id="chapters"></nav>
+<footer><p>Recorded with sample services and dummy credentials. No workloads executed. Captions, pointer guides, and focus zooms support the recording.</p><div class="downloads"><a href="tiphys-showcase.webm" download>WebM</a><a href="tiphys-showcase.mp4" download>MP4</a></div></footer>
+</main>
+<script>
+const video = document.querySelector('#walkthrough');
+const chapters = document.querySelector('#chapters');
+const clock = seconds => `${Math.floor(seconds / 60)}:${String(Math.floor(seconds % 60)).padStart(2, '0')}`;
+fetch('tiphys-showcase.json').then(response => {
+  if (!response.ok) throw new Error('No chapter metadata');
+  return response.json();
+}).then(metadata => {
+  const items = metadata.chapters.filter(chapter => Number.isFinite(chapter.seconds) && chapter.seconds >= 0 && typeof chapter.title === 'string');
+  const buttons = items.map(chapter => {
+    const button = document.createElement('button');
+    const time = document.createElement('span');
+    time.textContent = clock(chapter.seconds);
+    button.append(time, document.createTextNode(chapter.title));
+    button.addEventListener('click', () => {
+      video.currentTime = chapter.seconds;
+      video.scrollIntoView({ block: 'center', behavior: 'auto' });
+      video.play().catch(() => {});
+    });
+    chapters.append(button);
+    return button;
+  });
+  const update = () => {
+    const active = items.findLastIndex(chapter => chapter.seconds <= video.currentTime + .1);
+    buttons.forEach((button, index) => button.setAttribute('aria-current', String(index === active)));
+  };
+  video.addEventListener('timeupdate', update);
+  update();
+}).catch(() => { chapters.textContent = 'Use the video controls to explore the walkthrough.'; });
+</script>
+</body></html>

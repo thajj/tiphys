@@ -13,11 +13,13 @@ Inspect the generated YAML and follow runs through status and logs. Your existin
 
 [Get started](#quickstart) · [Deploy on Kubernetes](docs/production.md) · [Compatibility](docs/production.md#recorded-live-compatibility-check) · [Contribute](CONTRIBUTING.md) · [CI](https://github.com/thajj/tiphys/actions/workflows/ci.yaml) · [Report a bug](https://github.com/thajj/tiphys/issues)
 
-[![Tiphys walkthrough: drag components from Library, configure and connect them, then paste an official Argo YAML example](docs/media/tiphys-showcase.gif)](docs/media/tiphys-showcase.mp4)
+## Watch the walkthrough
 
-[Watch the MP4 walkthrough](docs/media/tiphys-showcase.mp4) · [View static screenshots (no animation)](#workspace-tour)
+https://github.com/user-attachments/assets/39629670-35a4-4fb3-aa98-5cdd3c9ef4df
 
-*The step-by-step GIF uses captures of the real editor: three components added from Library, their settings and connections, then an official Argo YAML import. The visuals use the compiled app with editor permissions, sample services, and dummy credentials. No workloads were executed for this walkthrough. The AI screenshot uses a sample Gemini response.*
+[Download WebM](docs/media/tiphys-showcase.webm) · [Download MP4](docs/media/tiphys-showcase.mp4) · [Static screenshots](#workspace-tour)
+
+*Two minutes in the actual Tiphys editor: drag components, configure tasks, connect steps, then paste an official Argo example. The recording uses the compiled app with editor permissions, sample services, and dummy credentials. No workloads are executed. The AI screenshot uses a sample Gemini response.*
 
 ## Workspace tour
 
