@@ -11,6 +11,8 @@ Tiphys is an open-source visual editor for Argo Workflows. Drag components from 
 
 Inspect the generated YAML and follow runs through status and logs. Your existing Argo installation executes the workflows.
 
+**Tiphys is a proof of concept, and I plan to keep developing it.** I’d welcome [feedback](https://github.com/thajj/tiphys/issues) on what works, what gets in your way, and what you’d like to see next. Ideas, bug reports, and real workflow examples will help me decide what to work on.
+
 [Get started](#quickstart) · [Deploy on Kubernetes](docs/production.md) · [Compatibility](docs/production.md#recorded-live-compatibility-check) · [Contribute](CONTRIBUTING.md) · [CI](https://github.com/thajj/tiphys/actions/workflows/ci.yaml) · [Report a bug](https://github.com/thajj/tiphys/issues)
 
 ## Watch the walkthrough
@@ -140,8 +142,6 @@ Browser tests need `openssl` on `PATH` and port 3000 available. On Linux, you ma
 `pnpm check` runs the type-checks, tests, build, and browser suite. After a build, `pnpm start` runs the compiled gateway with the [production runtime configuration](docs/production.md); it does not load `.env.local`.
 
 The [CI workflow](.github/workflows/ci.yaml) checks the workspace, browser behavior, the restricted production container, and OIDC login/header handling.
-
-**Recorded compatibility check (October 23, 2026):** the compiled gateway passed workflow submission, completion, logs, resume/resubmit, and template lifecycle checks against **Argo Workflows 4.1.6** on **Kubernetes 1.37.0**, using **kind 0.33.0**. The check did not cover artifact archiving or a real OIDC provider. Follow the [verification record and deployment checks](docs/production.md#recorded-live-compatibility-check) for your own identity provider, policies, and workloads; fixture tests alone do not verify your deployment.
 
 ## Contributing and support
 
