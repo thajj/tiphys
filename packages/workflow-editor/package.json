@@ -14,7 +14,7 @@
     "@tiphys/workflow-domain": "workspace:*",
     "@monaco-editor/react": "^4.7.0",
     "js-yaml": "4.3.2",
-    "lucide-react": "^0.563.0",
+    "lucide-react": "^0.577.0",
     "monaco-editor": "0.52.2",
     "monaco-yaml": "^5.5.1",
     "react": "^19.3.1",
