@@ -654,29 +654,36 @@ const Flow = ({ shell, renderMode }: { shell: WorkflowBuilderProps; renderMode: 
       }
   };
 
+  // Replaces the active workflow with an imported one, keeping its metadata and
+  // spec (including the import record that preserves unmodeled fields).
+  const replaceActiveWorkflow = (imported: { nodes: AppNode[]; edges: AppEdge[]; metadata: WorkflowMetadata; spec: WorkflowSpec }) => {
+      const layouted = getLayoutedElements(imported.nodes, imported.edges, layoutDirection);
+      setNodes(layouted.nodes);
+      setEdges(layouted.edges);
+      setWfMetadata(imported.metadata);
+      setWfSpec(imported.spec);
+
+      // Also update the session name
+      setSessions(prev => prev.map(s => {
+          if (s.id === activeSessionId) {
+              return { ...s, name: imported.metadata.name };
+          }
+          return s;
+      }));
+
+      // A new workflow starts a new history: undoing into the previous graph would
+      // pair it with this workflow's import record.
+      setHistory([{ nodes: layouted.nodes, edges: layouted.edges }]);
+      setHistoryIndex(0);
+
+      setTimeout(() => {
+          updateNodeInternals(layouted.nodes.map(n => n.id));
+          reactFlowInstance?.fitView({ padding: 0.25, duration: 400 });
+      }, 30);
+  };
+
   const handleImportReplace = () => {
-      if (pendingImport) {
-          const layouted = getLayoutedElements(pendingImport.nodes, pendingImport.edges, layoutDirection);
-          setNodes(layouted.nodes);
-          setEdges(layouted.edges);
-          setWfMetadata(pendingImport.metadata);
-          setWfSpec(pendingImport.spec);
-
-          // Also update the session name
-          setSessions(prev => prev.map(s => {
-              if (s.id === activeSessionId) {
-                  return { ...s, name: pendingImport.metadata.name };
-              }
-              return s;
-          }));
-
-          pushHistory(layouted.nodes, layouted.edges);
-
-          setTimeout(() => {
-              updateNodeInternals(layouted.nodes.map(n => n.id));
-              reactFlowInstance?.fitView({ padding: 0.25, duration: 400 });
-          }, 30);
-      }
+      if (pendingImport) replaceActiveWorkflow(pendingImport);
       setPendingImport(null);
       setShowImportModal(false);
   };
@@ -708,25 +715,10 @@ const Flow = ({ shell, renderMode }: { shell: WorkflowBuilderProps; renderMode: 
   };
 
   // Callback to handle updates from YAML Editor
+  // Applying YAML re-imports the manifest, so it replaces the workflow and its import record.
   const handleYamlUpdate = (parsed: { nodes: AppNode[], edges: AppEdge[], metadata: WorkflowMetadata, spec: WorkflowSpec }) => {
-     const layouted = getLayoutedElements(parsed.nodes, parsed.edges, layoutDirection);
-     setNodes(layouted.nodes);
-     setEdges(layouted.edges);
-     setWfMetadata(parsed.metadata);
-     setWfSpec(parsed.spec);
-
-     // Update session metadata too
-     setSessions(prev => prev.map(s => {
-        if (s.id === activeSessionId) {
-            return { ...s, name: parsed.metadata.name, metadata: parsed.metadata, spec: parsed.spec };
-        }
-        return s;
-     }));
-
-     pushHistory(layouted.nodes, layouted.edges);
-
-     // Optional: Fit view after big change
-     setTimeout(() => reactFlowInstance?.fitView({ duration: 800 }), 100);
+     replaceActiveWorkflow(parsed);
+     setSessions(prev => prev.map(s => s.id === activeSessionId ? { ...s, metadata: parsed.metadata, spec: parsed.spec } : s));
   };
 
   // --- Global Event Listeners (Drop & Paste) ---
@@ -951,20 +943,16 @@ const Flow = ({ shell, renderMode }: { shell: WorkflowBuilderProps; renderMode: 
               const yamlStr = jsYaml.dump(payload.rawTemplate);
               const parsed = parseYamlToWorkflow(yamlStr);
               if (parsed && parsed.nodes.length > 0) {
+                  // Keep the parsed node IDs: the import record that preserves the
+                  // template's unmodeled fields is keyed by them.
                   const rawNodes = parsed.nodes.map((n: any) => ({
                       ...n,
-                      id: getId(),
                       data: { ...n.data, status: 'Pending' },
                       targetPosition: layoutDirection === 'LR' ? Position.Left : Position.Top,
                       sourcePosition: layoutDirection === 'LR' ? Position.Right : Position.Bottom,
                   }));
-                  const idMap: Record<string, string> = {};
-                  parsed.nodes.forEach((oldN: any, idx: number) => { idMap[oldN.id] = rawNodes[idx].id; });
                   const rawEdges = parsed.edges.map((e: any) => ({
                       ...e,
-                      id: `e${idMap[e.source]}-${idMap[e.target]}`,
-                      source: idMap[e.source],
-                      target: idMap[e.target],
                       type: 'smoothstep',
                       animated: true,
                       markerEnd: { type: MarkerType.ArrowClosed }
@@ -993,16 +981,8 @@ const Flow = ({ shell, renderMode }: { shell: WorkflowBuilderProps; renderMode: 
                       return;
                   }
 
-                  // Empty canvas, just add
-                  setNodes(nds => {
-                      const res = nds.concat(newNodes);
-                      pushHistory(res, edges.concat(layouted.edges));
-                      return res;
-                  });
-                  setEdges(eds => eds.concat(layouted.edges));
-                  setTimeout(() => {
-                      updateNodeInternals(newNodes.map(n => n.id));
-                  }, 30);
+                  // Empty canvas: start from the template, keeping its full spec.
+                  replaceActiveWorkflow({ ...parsed, nodes: newNodes, edges: layouted.edges });
               } else {
                   showError(`Failed to expand template "${payload.name}". No nodes generated.`);
               }
@@ -1961,6 +1941,8 @@ const Flow = ({ shell, renderMode }: { shell: WorkflowBuilderProps; renderMode: 
                               spec={wfSpec}
                               onUpdate={handleYamlUpdate}
                               onClose={closeInspector}
+                              onUndo={undo}
+                              canUndo={historyIndex > 0}
                               modelPath={yamlModelPaths.pipelineInspector}
                               documentId={activeSessionId || undefined}
                           />

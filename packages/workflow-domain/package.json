@@ -11,7 +11,8 @@
   "dependencies": {
     "dagre": "0.8.5",
     "js-yaml": "4.3.2",
-    "reactflow": "^11.11.4"
+    "reactflow": "^11.11.4",
+    "yaml": "2.9.1"
   },
   "devDependencies": {
     "@types/dagre": "0.7.54"

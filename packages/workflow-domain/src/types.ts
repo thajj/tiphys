@@ -89,6 +89,31 @@ export interface WorkflowSpec {
   volumes?: any[];
   arguments?: { parameters?: NameValue[], artifacts?: Artifact[] };
   artifactRepositoryRef?: any;
+  /**
+   * Internal import record used to regenerate an imported manifest without
+   * dropping fields the editor does not model. JSON-serializable; never emitted.
+   */
+  editorSource?: WorkflowEditorSource;
+}
+
+export type WorkflowSourcePath = (string | number)[];
+
+export interface WorkflowEditorSource {
+  /** The imported manifest exactly as parsed. */
+  document: Record<string, any>;
+  /** The imported YAML text, so comments, formatting, and anchors survive export. */
+  text?: string;
+  /** How the entrypoint template was projected onto the canvas. */
+  entrypointKind: 'dag' | 'steps' | 'template';
+  /** Where each imported node's task and template live in `document`. */
+  nodes: Record<string, { taskPath?: WorkflowSourcePath; templatePath?: WorkflowSourcePath }>;
+  /** The editor projection as imported; diffed against the current one on export. */
+  imported: {
+    metadata: WorkflowMetadata;
+    spec: WorkflowSpec;
+    nodes: AppNode[];
+    edges: AppEdge[];
+  };
 }
 
 export interface Workflow {

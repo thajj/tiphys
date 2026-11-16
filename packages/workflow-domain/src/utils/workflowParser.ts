@@ -1,13 +1,17 @@
 import * as yaml from 'js-yaml';
-import { AppNode, AppEdge, WorkflowMetadata, WorkflowSpec, FlowNodeData, NodeType } from '../types';
+import { AppNode, AppEdge, WorkflowMetadata, WorkflowSpec, FlowNodeData, NodeType, WorkflowEditorSource } from '../types';
 import { getLayoutedElements } from './dagLayout';
 import { MarkerType } from 'reactflow';
+
+// Core scalars plus merge keys: keeps timestamps and other non-JSON scalars as
+// plain strings so the imported document survives JSON draft storage unchanged.
+export const MANIFEST_YAML_SCHEMA = yaml.CORE_SCHEMA.extend({ implicit: [yaml.types.merge] });
 
 const getId = () => `imported-${Math.random().toString(36).substr(2, 9)}`;
 
 export const parseYamlToWorkflow = (yamlString: string): { nodes: AppNode[], edges: AppEdge[], metadata: WorkflowMetadata, spec: WorkflowSpec } | null => {
     try {
-        const obj: any = yaml.load(yamlString);
+        const obj: any = yaml.load(yamlString, { schema: MANIFEST_YAML_SCHEMA });
         if (!obj) {
             throw new Error("Invalid Argo Workflow YAML. Object is empty.");
         }
@@ -38,6 +42,19 @@ export const parseYamlToWorkflow = (yamlString: string): { nodes: AppNode[], edg
         };
 
         const templates = obj.spec?.templates || [];
+
+        // A workflow that only references a WorkflowTemplate has no local graph to show.
+        if (templates.length === 0 && obj.spec?.workflowTemplateRef) {
+            spec.editorSource = JSON.parse(JSON.stringify({
+                document: obj,
+                text: yamlString,
+                entrypointKind: 'template',
+                nodes: {},
+                imported: { metadata, spec, nodes: [], edges: [] },
+            } satisfies WorkflowEditorSource));
+            return { nodes: [], edges: [], metadata, spec };
+        }
+
         let entrypointName = spec.entrypoint;
         let entrypointTemplate = templates.find((t: any) => t.name === entrypointName);
 
@@ -54,9 +71,15 @@ export const parseYamlToWorkflow = (yamlString: string): { nodes: AppNode[], edg
 
         let nodes: AppNode[] = [];
         let edges: AppEdge[] = [];
+        const entrypointPath = ['spec', 'templates', templates.indexOf(entrypointTemplate)];
+        const sourceNodes: WorkflowEditorSource['nodes'] = {};
 
         // Helper to find a template definition
         const findTemplate = (name: string) => templates.find((t: any) => t.name === name);
+        const templatePathFor = (name: unknown) => {
+            const index = typeof name === 'string' ? templates.findIndex((t: any) => t.name === name) : -1;
+            return index === -1 ? undefined : ['spec', 'templates', index];
+        };
 
         // Helper to convert a template to node data
         const templateToNodeData = (tmpl: any, taskLabel: string): FlowNodeData => {
@@ -123,10 +146,15 @@ export const parseYamlToWorkflow = (yamlString: string): { nodes: AppNode[], edg
             const tasks = entrypointTemplate.dag.tasks || [];
             const taskNodeMap = new Map<string, string>(); // taskName -> nodeId
 
-            tasks.forEach((task: any) => {
+            tasks.forEach((task: any, taskIndex: number) => {
                 task = structuredClone(task);
                 const nodeId = getId();
                 taskNodeMap.set(task.name, nodeId);
+                const taskPath = [...entrypointPath, 'dag', 'tasks', taskIndex];
+                sourceNodes[nodeId] = {
+                    taskPath,
+                    templatePath: task.inline ? [...taskPath, 'inline'] : task.templateRef ? undefined : templatePathFor(task.template),
+                };
 
                 let nodeData: any;
 
@@ -149,7 +177,8 @@ export const parseYamlToWorkflow = (yamlString: string): { nodes: AppNode[], edg
                 } else {
                     // If task references a template, look it up.
                     // If it has inline template, use it.
-                    let effectiveTemplate = task.template ? findTemplate(task.template) : task;
+                    // An inline template is defined on the task itself.
+                    let effectiveTemplate = task.inline ? { ...task.inline, name: task.name } : task.template ? findTemplate(task.template) : task;
                     if (!effectiveTemplate && task.template) {
                          // If template not found, maybe it's in another file, but we fallback to a placeholder
                          effectiveTemplate = { name: task.template, container: { image: 'unknown', command: 'template not found' } };
@@ -259,8 +288,13 @@ export const parseYamlToWorkflow = (yamlString: string): { nodes: AppNode[], edg
                      step = structuredClone(step);
                      const nodeId = getId();
                      currentStepIds.push(nodeId);
+                     const stepPath = [...entrypointPath, 'steps', groupIdx, stepIdx];
+                     sourceNodes[nodeId] = {
+                         taskPath: stepPath,
+                         templatePath: step.inline ? [...stepPath, 'inline'] : step.templateRef ? undefined : templatePathFor(step.template),
+                     };
 
-                     let effectiveTemplate = step.template ? findTemplate(step.template) : step;
+                     let effectiveTemplate = step.inline ? { ...step.inline, name: step.name } : step.template ? findTemplate(step.template) : step;
                      if (!effectiveTemplate && step.template) effectiveTemplate = { name: step.template, container: { image: 'unknown' } };
 
                      const nodeData = templateToNodeData(effectiveTemplate, step.name || `step-${groupIdx}-${stepIdx}`);
@@ -336,6 +370,7 @@ export const parseYamlToWorkflow = (yamlString: string): { nodes: AppNode[], edg
         } else {
             // Single Node Workflow
             const nodeId = getId();
+            sourceNodes[nodeId] = { templatePath: entrypointPath };
             nodes.push({
                 id: nodeId,
                 type: 'custom',
@@ -346,6 +381,15 @@ export const parseYamlToWorkflow = (yamlString: string): { nodes: AppNode[], edg
 
         // Apply Layout
         const layouted = getLayoutedElements(nodes, edges);
+
+        // editorSource rides along in drafts, so everything in it must be JSON-safe.
+        spec.editorSource = JSON.parse(JSON.stringify({
+            document: obj,
+            text: yamlString,
+            entrypointKind: entrypointTemplate.dag ? 'dag' : entrypointTemplate.steps ? 'steps' : 'template',
+            nodes: sourceNodes,
+            imported: { metadata, spec, nodes: layouted.nodes, edges: layouted.edges },
+        } satisfies WorkflowEditorSource));
 
         return {
             nodes: layouted.nodes,

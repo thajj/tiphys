@@ -6,7 +6,7 @@ import {
   type WorkflowBuilderProps,
 } from "@tiphys/platform-sdk";
 import { PlatformThemeProvider } from "@tiphys/ui-platform";
-import { SimulationEngine, type FlowNodeData, type Workflow } from "@tiphys/workflow-domain";
+import { SimulationEngine, parseYamlToWorkflow, type FlowNodeData, type Workflow, type WorkflowSession } from "@tiphys/workflow-domain";
 import {
   sampleSessions,
   sampleWorkflowRuns,
@@ -226,6 +226,127 @@ describe("WorkflowBuilder shell alignment", () => {
     expect(screen.queryByText("Succeeded")).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "View runs" }));
     expect(shell.eventBus.emit).toHaveBeenCalledWith({ type: "navigation.requested", to: "workflows", source: "workspace" });
+  });
+
+  it("submits an imported workflow with visual edits patched into the original manifest", async () => {
+    const parsed = parseYamlToWorkflow(`
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata: { generateName: imported-, namespace: ml-platform }
+spec:
+  entrypoint: main
+  onExit: cleanup
+  templates:
+    - name: main
+      dag:
+        tasks:
+          - { name: build, template: build, continueOn: { failed: true } }
+    - name: build
+      podSpecPatch: '{"terminationGracePeriodSeconds": 5}'
+      sidecars: [{ name: proxy, image: envoyproxy/envoy:v1.30 }]
+      container: { image: example/build:1.0, command: [make, all] }
+    - name: cleanup
+      container: { image: busybox }
+`)!;
+    const session: WorkflowSession = JSON.parse(JSON.stringify({
+      id: "imported-session", name: "imported", updatedAt: Date.now(), ...parsed,
+    }));
+    const shell = createShell();
+    const submitWorkflow = vi.fn(async (_namespace, workflow) => ({ ...workflow, metadata: { ...workflow.metadata, name: "imported-1" } }));
+    const saveDraft = vi.fn(async (_workspaceId, _projectId, draft) => draft);
+    initializeTestRuntime(shell, { submitWorkflow }, {
+      saveDraft,
+      loadDraft: async () => ({ sessions: [session], activeSessionId: session.id, savedAt: Date.now() }),
+    });
+    render(<PlatformThemeProvider><WorkflowBuilderApp shell={shell} /></PlatformThemeProvider>);
+
+    fireEvent.click(await screen.findByText("build"));
+    fireEvent.change(await screen.findByDisplayValue("example/build:1.0"), { target: { value: "example/build:2.0" } });
+    fireEvent.click(screen.getByRole("button", { name: "Run" }));
+
+    await waitFor(() => expect(submitWorkflow).toHaveBeenCalledOnce());
+    const manifest = submitWorkflow.mock.calls[0][1];
+    expect(manifest.spec.onExit).toBe("cleanup");
+    expect(manifest.spec.templates[0].dag.tasks[0]).toEqual({ name: "build", template: "build", continueOn: { failed: true } });
+    expect(manifest.spec.templates[1]).toEqual({
+      name: "build",
+      podSpecPatch: '{"terminationGracePeriodSeconds": 5}',
+      sidecars: [{ name: "proxy", image: "envoyproxy/envoy:v1.30" }],
+      container: { image: "example/build:2.0", command: ["make", "all"] },
+    });
+    expect(manifest.spec.templates[2]).toEqual({ name: "cleanup", container: { image: "busybox" } });
+    await waitFor(() => expect(saveDraft).toHaveBeenCalled());
+    expect(saveDraft.mock.lastCall![2].sessions[0].spec.editorSource.document).toEqual(session.spec.editorSource!.document);
+  });
+
+  it.each(["empty canvas", "replace current"] as const)("runs a dropped WorkflowTemplate with its full spec (%s)", async mode => {
+    const rawTemplate = {
+      apiVersion: "argoproj.io/v1alpha1",
+      kind: "WorkflowTemplate",
+      metadata: { name: "shared-etl", namespace: "ml-platform", resourceVersion: "7" },
+      spec: {
+        entrypoint: "main",
+        onExit: "cleanup",
+        arguments: { parameters: [{ name: "env", value: "prod", enum: ["dev", "prod"] }] },
+        volumes: [{ name: "scratch", emptyDir: {} }],
+        templates: [
+          { name: "main", dag: { tasks: [
+            { name: "extract", template: "extract" },
+            { name: "load", template: "load", depends: "extract.Succeeded" },
+          ] } },
+          { name: "extract", podSpecPatch: "{}", container: { image: "example/extract:1.0" } },
+          { name: "load", retryStrategy: { limit: "2", expression: "true" }, container: { image: "example/load:1.0" } },
+          { name: "cleanup", container: { image: "busybox" } },
+        ],
+      },
+    };
+    // jsdom does not implement modal dialogs.
+    HTMLDialogElement.prototype.showModal ??= function (this: HTMLDialogElement) { this.open = true; };
+    HTMLDialogElement.prototype.close ??= function (this: HTMLDialogElement) { this.open = false; };
+    const shell = createShell();
+    const submitWorkflow = vi.fn(async (_namespace, workflow) => ({ ...workflow, metadata: { ...workflow.metadata, name: "shared-etl-1" } }));
+    const emptySession: WorkflowSession = { id: "empty", name: "empty", nodes: [], edges: [], metadata: { name: "empty", namespace: "ml-platform" }, spec: { entrypoint: "main", templates: [] }, updatedAt: Date.now() };
+    initializeTestRuntime(shell, { submitWorkflow }, mode === "empty canvas"
+      ? { loadDraft: async () => ({ sessions: [emptySession], activeSessionId: "empty", savedAt: Date.now() }) }
+      : {});
+    const { container } = render(<PlatformThemeProvider><WorkflowBuilderApp shell={shell} /></PlatformThemeProvider>);
+    if (mode === "replace current") await screen.findByText("Extract Data");
+    else await screen.findByRole("tab", { name: "empty" });
+    await waitFor(() => expect(container.querySelector(".react-flow__viewport")).toBeTruthy());
+    await act(async () => { await new Promise(resolve => setTimeout(resolve, 50)); });
+
+    const payload = JSON.stringify({ name: "shared-etl", namespace: "ml-platform", rawTemplate });
+    fireEvent.drop(container.querySelector(".react-flow")!, {
+      clientX: 200, clientY: 200,
+      dataTransfer: { files: [], getData: (key: string) => key === "application/reactflow" ? "workflow-template" : key === "application/payload" ? payload : "" },
+    });
+    if (mode === "replace current") fireEvent.click(await screen.findByRole("button", { name: /Replace Current/ }));
+    expect(await screen.findByText("extract")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Run" }));
+
+    await waitFor(() => expect(submitWorkflow).toHaveBeenCalledOnce());
+    const manifest = submitWorkflow.mock.calls[0][1];
+    expect(manifest.kind).toBe("Workflow");
+    expect(manifest.metadata).toEqual({ generateName: "shared-etl-", namespace: "ml-platform" });
+    expect(manifest.spec).toEqual(rawTemplate.spec);
+  });
+
+  it("starts a fresh undo history when an import replaces the workflow", async () => {
+    HTMLDialogElement.prototype.showModal ??= function (this: HTMLDialogElement) { this.open = true; };
+    HTMLDialogElement.prototype.close ??= function (this: HTMLDialogElement) { this.open = false; };
+    const shell = createShell();
+    initializeTestRuntime(shell);
+    render(<PlatformThemeProvider><WorkflowBuilderApp shell={shell} /></PlatformThemeProvider>);
+    await screen.findByText("Extract Data");
+    fireEvent.click(screen.getByRole("button", { name: "Auto-arrange layout" }));
+    expect((screen.getByRole("button", { name: "Undo" }) as HTMLButtonElement).disabled).toBe(false);
+
+    const imported = "apiVersion: argoproj.io/v1alpha1\nkind: Workflow\nmetadata: { name: imported }\nspec:\n  entrypoint: build\n  templates:\n    - name: build\n      podSpecPatch: '{}'\n      container: { image: busybox }\n";
+    fireEvent.paste(window, { clipboardData: { getData: () => imported } });
+    fireEvent.click(await screen.findByRole("button", { name: /Replace Current/ }));
+    expect(await screen.findByText("build")).toBeTruthy();
+    // Undoing into the previous graph would pair it with the new import's source document.
+    expect((screen.getByRole("button", { name: "Undo" }) as HTMLButtonElement).disabled).toBe(true);
   });
 
   it("resynchronizes the selected node form after undo restores its data", async () => {

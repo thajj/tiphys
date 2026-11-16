@@ -26,6 +26,8 @@ type YamlDocumentEditorProps = {
   downloadFileName?: string;
   onApply?: (value: string) => Promise<void> | void;
   onClose?: () => void;
+  /** A persistent message about the document itself, shown above the editor. */
+  notice?: FeedbackState;
 };
 
 type MonacoMarker = {
@@ -310,6 +312,17 @@ function YamlDocumentEditorContent(props: YamlDocumentEditorProps) {
           </div>
         </div>
       </div>
+
+      {props.notice ? (
+        <div className="border-b border-[rgb(var(--wb-color-border-subtle)/0.65)] px-4 py-3">
+          <div
+            role="alert"
+            className={`rounded-xl border px-3 py-2 text-sm ${messageToneClasses[props.notice.tone]}`}
+          >
+            {props.notice.message}
+          </div>
+        </div>
+      ) : null}
 
       {feedback ? (
         <div className="border-b border-[rgb(var(--wb-color-border-subtle)/0.65)] px-4 py-3">

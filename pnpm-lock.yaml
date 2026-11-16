@@ -110,6 +110,9 @@ importers:
       reactflow:
         specifier: ^11.11.4
         version: 11.11.4(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
+      yaml:
+        specifier: 2.9.1
+        version: 2.9.1
     devDependencies:
       '@types/dagre':
         specifier: 0.7.54

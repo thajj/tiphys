@@ -8,6 +8,7 @@ import {
     WorkflowTemplateSummary,
 } from '../types';
 import * as yaml from 'js-yaml';
+import { generatePreservedWorkflowObject, generatePreservedYaml, preservedTemplateMetadata } from './workflowPreservation';
 
 /**
  * Generates a node ID slug (e.g. "Step Name" -> "step-name")
@@ -25,6 +26,9 @@ export const generateWorkflowObject = (
     metadata: WorkflowMetadata,
     specConfig: WorkflowSpec
 ): any => {
+    if (specConfig.editorSource) {
+        return generatePreservedWorkflowObject(nodes, edges, metadata, specConfig, generateWorkflowObject);
+    }
 
     const templates: any[] = [];
     const dagTasks: any[] = [];
@@ -274,6 +278,9 @@ export const generateWorkflowObject = (
 };
 
 export const generateYaml = (nodes: AppNode[], edges: AppEdge[], metadata: WorkflowMetadata, spec: WorkflowSpec): string => {
+    if (spec.editorSource) {
+        return generatePreservedYaml(nodes, edges, metadata, spec, generateWorkflowObject);
+    }
     const obj = generateWorkflowObject(nodes, edges, metadata, spec);
     return yaml.dump(obj, { indent: 2, lineWidth: -1, noRefs: true });
 };
@@ -289,6 +296,7 @@ export const generateWorkflowTemplateObject = (
         ...workflow,
         kind: 'WorkflowTemplate',
         metadata: {
+            ...(spec.editorSource ? preservedTemplateMetadata(nodes, edges, metadata, spec, generateWorkflowObject) : {}),
             name: metadata.name,
             namespace: metadata.namespace,
             ...(metadata.labels && Object.keys(metadata.labels).length > 0 ? { labels: metadata.labels } : {}),

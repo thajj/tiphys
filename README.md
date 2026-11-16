@@ -46,7 +46,7 @@ https://github.com/user-attachments/assets/39629670-35a4-4fb3-aa98-5cdd3c9ef4df
 
 *Copy a working example, paste it, and continue in the visual editor.*
 
-Tiphys serves Monaco, its language workers, and the Argo schema locally, with validation feedback before you apply YAML edits. Visual editing supports a subset of Argo. Importing advanced YAML into the graph and regenerating it can drop unsupported fields or simplify constructs. Review the result before submission. Argo performs the final validation.
+Tiphys serves Monaco, its language workers, and the Argo schema locally, with validation feedback before you apply YAML edits. Visual editing supports a subset of Argo. Imported YAML keeps the fields and constructs the graph does not model: Tiphys applies only your visual changes to the original manifest. If a change cannot be applied safely, such as renaming an imported step or rewiring a `depends` expression, Tiphys asks you to make it in the YAML editor instead. Editing a template that other steps also call gives the edited step its own copy, so the other callers are unchanged. Lines you did not change keep their exact text, including comments, formatting, and anchors; an edit to a value shared through an anchor or merge key changes only that one place. Argo performs the final validation.
 
 ### Draft with AI
 

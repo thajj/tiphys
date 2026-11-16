@@ -28,8 +28,9 @@ describe("ordinary Argo import roundtrips", () => {
     const output = generated.spec.templates.find((template: any) => template.container).container;
     expect(output).toEqual(container);
     expect(output).not.toHaveProperty("importedCommand");
-    expect(new Set(generated.spec.templates.map((template: any) => template.name)).size).toBe(generated.spec.templates.length);
-    expect(generated.spec.templates.find((template: any) => template.name === generated.spec.entrypoint).dag.tasks[0].template).toBe("main");
+    // The imported single-template workflow is kept as-is rather than wrapped in a generated DAG.
+    expect(generated.spec.entrypoint).toBe("main");
+    expect(generated.spec.templates).toEqual([{ name: "main", container }]);
   });
 
   it("keeps an image's default entrypoint when only args were imported", () => {
@@ -93,9 +94,13 @@ describe("ordinary Argo import roundtrips", () => {
     expect(inputs[2].artifacts![0].from).toBeUndefined();
     inputs[0].parameters![0].value = "edited first";
     expect(inputs[2].parameters![0].value).toBe("original");
-    const generatedTasks = generate(parsed).spec.templates[0].dag.tasks;
+    const generated = generate(parsed);
+    // The imported structure is kept: steps stay steps instead of becoming a DAG.
+    const main = generated.spec.templates[0];
+    const generatedTasks = kind === "dag" ? main.dag.tasks : main.steps.map((group: any[]) => group[0]);
     expect(generatedTasks[0].arguments.parameters[0].value).toBe("edited first");
     expect(generatedTasks[1].arguments.parameters[0]).toEqual({ name: "message", valueFrom: { expression: "workflow.name" } });
-    expect(generatedTasks[2].arguments.parameters[0].value).toBe("original");
+    expect(generatedTasks[2]).toEqual({ name: "default", template: "echo" });
+    expect(generated.spec.templates[1].inputs.parameters[0].value).toBe("original");
   });
 });
